@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { db } from '../db.js';
 import { requireAuth, optionalAuth } from '../auth.js';
 import { rankFor, checkBadges } from '../game.js';
+import { savePhoto, deletePhoto } from '../storage.js';
 
 export const router = Router();
 
@@ -29,6 +30,7 @@ function shapeLog(row, viewerId) {
     basePoints: row.base_points,
     minutes: row.minutes,
     note: row.note,
+    photo: row.photo || null,
     bonuses: JSON.parse(row.bonuses || '[]'),
     createdAt: row.created_at,
     user: {
@@ -127,6 +129,7 @@ function shapeComment(c, viewerId) {
   return {
     id: c.id,
     text: c.text,
+    photo: c.photo || null,
     createdAt: c.created_at,
     votes,
     voted,
@@ -157,13 +160,20 @@ router.get('/:id/comments', optionalAuth, (req, res) => {
 
 router.post('/:id/comments', requireAuth, (req, res) => {
   const text = String(req.body?.text ?? '').trim().slice(0, 400);
-  if (!text) return res.status(400).json({ error: 'Kommentar ist leer.' });
   const log = db.prepare('SELECT id FROM logs WHERE id = ?').get(Number(req.params.id));
   if (!log) return res.status(404).json({ error: 'Eintrag nicht gefunden.' });
 
+  let photo = null;
+  try {
+    photo = savePhoto(req.body?.photo, req.user.id);
+  } catch (e) {
+    return res.status(400).json({ error: e.message });
+  }
+  if (!text && !photo) return res.status(400).json({ error: 'Kommentar ist leer.' });
+
   const info = db
-    .prepare('INSERT INTO comments (log_id, user_id, text, created_at) VALUES (?, ?, ?, ?)')
-    .run(log.id, req.user.id, text, new Date().toISOString());
+    .prepare('INSERT INTO comments (log_id, user_id, text, photo, created_at) VALUES (?, ?, ?, ?, ?)')
+    .run(log.id, req.user.id, text, photo, new Date().toISOString());
   const row = db
     .prepare(
       `SELECT c.*, u.display_name, u.fish, u.color, u.xp
@@ -197,6 +207,7 @@ commentRouter.delete('/:id', requireAuth, (req, res) => {
   if (!comment || comment.user_id !== req.user.id)
     return res.status(404).json({ error: 'Kommentar nicht gefunden.' });
   db.prepare('DELETE FROM comments WHERE id = ?').run(comment.id);
+  deletePhoto(comment.photo);
   res.json({ ok: true });
 });
 

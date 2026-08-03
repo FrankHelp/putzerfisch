@@ -1,8 +1,9 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { api, num } from '../api.js';
 import { useApp } from '../state.jsx';
 import { navigate } from '../router.jsx';
 import { Sheet, Empty, Skeletons, Confetti, CountUp } from '../components/ui.jsx';
+import { compressToJpegDataUrl } from '../photo.js';
 
 export default function Add() {
   const { user, setUser, toast } = useApp();
@@ -13,8 +14,10 @@ export default function Add() {
   const [selected, setSelected] = useState(null);
   const [preview, setPreview] = useState(null);
   const [note, setNote] = useState('');
+  const [photo, setPhoto] = useState(null);
   const [saving, setSaving] = useState(false);
   const [celebration, setCelebration] = useState(null);
+  const photoInputRef = useRef(null);
 
   useEffect(() => {
     api.get('/activities/categories').then((d) => setCategories(d.categories)).catch(() => {});
@@ -47,6 +50,7 @@ export default function Add() {
   const openActivity = async (a) => {
     setSelected(a);
     setNote('');
+    setPhoto(null);
     setPreview(null);
     try {
       setPreview(await api.get(`/activities/${a.id}/preview`));
@@ -55,17 +59,43 @@ export default function Add() {
     }
   };
 
+  const onPickPhoto = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // erlaubt, dieselbe Datei erneut zu wählen
+    if (!file) return;
+    if (!file.type.startsWith('image/')) return toast('Bitte ein Bild wählen.', 'err');
+    try {
+      setPhoto(await compressToJpegDataUrl(file));
+    } catch {
+      toast('Foto konnte nicht gelesen werden.', 'err');
+    }
+  };
+
   const confirm = async () => {
     setSaving(true);
     try {
-      const d = await api.post('/activities/log', { activityId: selected.id, note });
+      const d = await api.post('/activities/log', { activityId: selected.id, note, photo: photo || undefined });
       setUser(d.user);
       setSelected(null);
+      setPhoto(null);
       setCelebration({ ...d, activity: selected });
     } catch (e) {
       toast(e.message, 'err');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const undoLast = async () => {
+    try {
+      const res = await api.del(`/activities/log/${celebration.logId}`);
+      setUser(res.user);
+      toast('Eintrag zurückgenommen ↩');
+      setCelebration(null);
+      navigate('/feed');
+    } catch (e) {
+      toast(e.message, 'err');
+      throw e;
     }
   };
 
@@ -80,6 +110,7 @@ export default function Add() {
           setCelebration(null);
           navigate('/feed');
         }}
+        onUndo={undoLast}
       />
     );
 
@@ -202,6 +233,20 @@ export default function Add() {
               />
             </div>
 
+            {photo ? (
+              <div className="photo-preview-wrap">
+                <img className="photo-preview" src={photo} alt="Vorschau" />
+                <div>
+                  <button className="c-time link" onClick={() => setPhoto(null)}>Foto entfernen</button>
+                </div>
+              </div>
+            ) : (
+              <button className="photo-pick" onClick={() => photoInputRef.current?.click()}>
+                📷 Foto (optional)
+              </button>
+            )}
+            <input ref={photoInputRef} type="file" accept="image/*" hidden onChange={onPickPhoto} />
+
             <button className="btn btn-primary btn-block" onClick={confirm} disabled={saving}>
               {saving ? '…' : `Erledigt — ${preview ? `+${preview.points}` : `+${selected.points}`} Punkte kassieren 🫧`}
             </button>
@@ -216,12 +261,22 @@ export default function Add() {
 }
 
 /* ---------- Erfolgs-Feier ---------- */
-function Celebration({ data, onDone }) {
+function Celebration({ data, onDone, onUndo }) {
   const [showConfetti, setShowConfetti] = useState(true);
+  const [undoing, setUndoing] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setShowConfetti(false), 3200);
     return () => clearTimeout(t);
   }, []);
+
+  const undo = async () => {
+    setUndoing(true);
+    try {
+      await onUndo();
+    } catch {
+      setUndoing(false);
+    }
+  };
 
   return (
     <div className="splash">
@@ -280,6 +335,11 @@ function Celebration({ data, onDone }) {
           <button className="btn btn-primary" onClick={onDone}>
             Weiter zum Feed →
           </button>
+          <div className="center" style={{ marginTop: 4 }}>
+            <button className="link-btn" onClick={undo} disabled={undoing}>
+              {undoing ? '…' : '↩ Rückgängig'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

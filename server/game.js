@@ -90,7 +90,40 @@ export function checkBadges(db, userId, ctx = {}) {
 }
 
 // ---- Streak & Boni -----------------------------------------------------
-export const dayKey = (d = new Date()) => d.toISOString().slice(0, 10);
+// Tagesgrenzen in fester Server-Zeitzone Europe/Berlin (Spec: keine Pro-User-Zeitzonen).
+const BERLIN_TZ = 'Europe/Berlin';
+const berlinDate = new Intl.DateTimeFormat('en-CA', {
+  timeZone: BERLIN_TZ,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+});
+
+/** Berliner Kalendertag als YYYY-MM-DD. */
+export const dayKey = (d = new Date()) => {
+  const p = berlinDate.formatToParts(d);
+  const g = (t) => p.find((x) => x.type === t)?.value ?? '';
+  return `${g('year')}-${g('month')}-${g('day')}`;
+};
+
+/** UTC-Grenzen [start, end) eines Berliner Kalendertags als ISO-Strings. */
+export function berlinDayRange(dateStr = dayKey()) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return [
+    new Date(berlinMidnightUTC(y, m, d)).toISOString(),
+    new Date(berlinMidnightUTC(y, m, d + 1)).toISOString(),
+  ];
+}
+
+/** UTC-Timestamp von 00:00 Uhr an einem Berliner Kalendertag (UTC+1/+2 → 22:00/23:00 UTC des Vortags). */
+function berlinMidnightUTC(y, m, d) {
+  const want = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  for (const h of [22, 23]) {
+    const ts = Date.UTC(y, m - 1, d - 1, h, 0, 0, 0);
+    if (dayKey(new Date(ts)) === want) return ts;
+  }
+  return Date.UTC(y, m - 1, d - 1, 23, 0, 0, 0);
+}
 
 export function updateStreak(db, user) {
   const today = dayKey();
@@ -121,9 +154,10 @@ export function computePoints(db, user, activity, streak) {
 
   // Früher Vogel im Riff: erste Aktion des Tages in der WG
   if (user.wg_id) {
+    const [from, to] = berlinDayRange();
     const firstToday = db
-      .prepare("SELECT COUNT(*) n FROM logs WHERE wg_id = ? AND substr(created_at,1,10) = ?")
-      .get(user.wg_id, dayKey());
+      .prepare('SELECT COUNT(*) n FROM logs WHERE wg_id = ? AND created_at >= ? AND created_at < ?')
+      .get(user.wg_id, from, to);
     if (Number(firstToday.n) === 0) {
       mult += 0.2;
       bonuses.push({ icon: '🌅', label: 'Erster im Riff heute', value: '+20%' });

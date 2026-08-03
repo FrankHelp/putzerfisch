@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { db } from '../db.js';
 import { optionalAuth } from '../auth.js';
-import { rankFor, BADGES, dayKey } from '../game.js';
+import { rankFor, BADGES, dayKey, berlinDayRange } from '../game.js';
 import { CATEGORIES } from '../catalog.js';
 
 export const router = Router();
@@ -31,9 +31,10 @@ router.get('/:id', optionalAuth, (req, res) => {
   const history = [];
   for (let i = 13; i >= 0; i--) {
     const day = dayKey(new Date(Date.now() - i * 86400000));
+    const [from, to] = berlinDayRange(day);
     const row = db
-      .prepare('SELECT COALESCE(SUM(points),0) p FROM logs WHERE user_id = ? AND substr(created_at,1,10) = ?')
-      .get(u.id, day);
+      .prepare('SELECT COALESCE(SUM(points),0) p FROM logs WHERE user_id = ? AND created_at >= ? AND created_at < ?')
+      .get(u.id, from, to);
     history.push({ day, points: Number(row.p) });
   }
 

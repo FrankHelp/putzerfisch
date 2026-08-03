@@ -50,10 +50,10 @@ PUTZAPP_SECRET=<langer-zufallsstring> PORT=8080 npm start
 | Bereich | Details |
 |---|---|
 | **Login** | Registrierung mit Fisch-Avatar und Farbe, scrypt-Passworthashes, signierte Tokens (30 Tage) |
-| **Feed** | Startseite mit allen Putzaktionen – umschaltbar zwischen eigener WG und allen Riffen |
+| **Feed** | Startseite mit allen Putzaktionen – umschaltbar zwischen eigener WG und allen Riffen, Fotos als Nachweis |
 | **Reaktionen** | 8 Emojis pro Eintrag, ein Tap zum An-/Abwählen, optimistisch dargestellt |
-| **Kommentare** | Kommentieren, Kommentare upvoten, eigene löschen; sortiert nach Stimmen |
-| **Aktivität eintragen** | Volltextsuche **oder** Auswahl über 9 Kategorien, danach Bestätigung mit Bonus-Vorschau |
+| **Kommentare** | Kommentieren mit optionalen Fotos, Kommentare upvoten, eigene löschen; sortiert nach Stimmen |
+| **Aktivität eintragen** | Volltextsuche **oder** Auswahl über 9 Kategorien, danach Bestätigung mit Bonus-Vorschau und optionalem Foto |
 | **Leaderboards** | WG-intern · WG-Liga (gemittelt pro Kopf) · global – je für Woche/Monat/gesamt |
 | **WGs** | Gründen mit Wappen und Motto, Beitritt per 6-stelligem Code, Riff-Sauberkeits-Anzeige |
 | **Vorschläge** | Neue Aktivitäten einreichen, abstimmen, ab 5 Stimmen automatisch im Katalog |
@@ -86,6 +86,15 @@ Trüb → Algig → Sumpf*.
 Chance hat wie eine 8er-WG. Intern zeigt die WG-Ansicht zusätzlich den „fairen Anteil“, also wie
 viel jede Person bei Gleichverteilung beisteuern müsste.
 
+### Fotos
+
+Fotos sind **optional** – bei Putzaktionen und in Kommentaren. Der Client komprimiert sie vor dem
+Upload auf maximal **1512 px** (längste Kante) und exportiert als **JPG** (EXIF-Orientierung wird
+beachtet). Gespeichert wird lokal auf dem Server (kein externer Object-Storage), abgelegt als
+`server/uploads/<Datum>/<userId>_<zufall>.jpg` – also nach Datum sortiert für einfache Backups
+(einfach den Ordner mitkopieren). Beim Zurücknehmen von Einträgen oder Löschen von Kommentaren
+wird die Datei automatisch entfernt.
+
 ---
 
 ## Aufbau
@@ -97,12 +106,14 @@ putzapp/
 │   ├── db.js               Schema + Katalog-Seed (idempotent)
 │   ├── catalog.js          9 Kategorien, ~65 Putzaktivitäten
 │   ├── game.js             Ränge, Boni, Streaks, Abzeichen, Riff-Sauberkeit
+│   ├── storage.js          Lokale Foto-Ablage (uploads/<Datum>/<userId>_<hash>.jpg)
 │   ├── auth.js             scrypt-Hashing, HMAC-signierte Tokens, Middleware
 │   ├── seedDemo.js         Demo-Datensatz
 │   └── routes/             auth · activities · feed · leaderboard · wg · suggestions · users
 └── client/                 React 19 + Vite
     ├── src/router.jsx      Hash-Router in ~30 Zeilen (Zurück-Button funktioniert)
     ├── src/state.jsx       Auth-Context + Toasts
+    ├── src/photo.js        Bild-Kompression (max. 1512 px, JPG, EXIF)
     ├── src/styles.css      Design-System: Tiefsee-Glas, Blasen, Lichtstrahlen
     ├── src/components/     ui.jsx (Avatar, Sheet, Konfetti …) · FeedCard.jsx
     └── src/pages/          Login · Feed · Add · Board · Ideas · Profile · WG
@@ -121,6 +132,7 @@ Verschieben lässt sie sich per `PUTZAPP_DB=/pfad/zur.db`.
 | `PORT` | `4321` | Port der API |
 | `PUTZAPP_SECRET` | generiert | Signier-Secret für Tokens |
 | `PUTZAPP_DB` | `server/putzapp.db` | Pfad zur Datenbank |
+| `PUTZAPP_UPLOADS` | `server/uploads` | Ablageort für Fotos |
 | `PUTZAPP_APPROVE_VOTES` | `5` | Stimmen, bis ein Vorschlag in den Katalog wandert |
 
 ---
@@ -131,7 +143,6 @@ Ein paar Dinge sind bewusst nicht drin, weil sie erst bei echtem Betrieb relevan
 
 - **Rate Limiting** auf `/api/auth/*` – aktuell kann man Passwörter unbegrenzt durchprobieren.
   Bei einem Deploy ins offene Netz das zuerst nachrüsten.
-- **Bilder** zu Putzaktionen (Vorher/Nachher wäre für den Feed naheliegend).
 - **Push-Benachrichtigungen**, wenn jemand reagiert oder das Riff verschlammt.
 - **Wiederkehrende Aufgaben** mit Fälligkeitsdatum – der Datenbestand gibt das schon her.
 - **Saisons**: Leaderboard-Reset alle 3 Monate mit Trophäen-Archiv.

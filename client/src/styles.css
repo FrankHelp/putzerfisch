@@ -1440,6 +1440,115 @@ textarea.input { resize: vertical; min-height: 76px; line-height: 1.5; }
 
 .link { color: var(--cyan); font-weight: 800; }
 
+/* Unscheinbarer Text-Button (z. B. „Rückgängig“ im Erfolgs-Screen) */
+.link-btn {
+  background: none;
+  border: none;
+  padding: 6px 12px;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--faint);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+.link-btn:hover { color: var(--cyan); }
+.link-btn:disabled { opacity: 0.5; pointer-events: none; }
+
+/* ---------- Fotos ---------- */
+.post-photo {
+  width: 100%;
+  max-height: 420px;
+  object-fit: cover;
+  border-radius: var(--r-md);
+  border: 1px solid var(--stroke);
+  margin-top: 10px;
+  display: block;
+}
+
+.photo-pick {
+  width: 100%;
+  padding: 12px;
+  border-radius: var(--r-md);
+  background: rgba(4, 20, 34, 0.4);
+  border: 1px dashed var(--stroke-strong);
+  color: var(--muted);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  margin-bottom: 13px;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+.photo-pick:hover { color: var(--cyan); border-color: var(--cyan); }
+
+.photo-preview-wrap { margin-bottom: 13px; text-align: center; }
+.photo-preview {
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  border-radius: var(--r-md);
+  border: 1px solid var(--stroke);
+  margin-bottom: 6px;
+}
+
+.c-photo {
+  display: block;
+  max-width: 100%;
+  max-height: 260px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--stroke);
+  margin-top: 6px;
+}
+
+.comment-photo-pre { position: relative; display: inline-block; margin-bottom: 8px; }
+.comment-photo-pre img {
+  display: block;
+  height: 64px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--stroke);
+}
+.comment-photo-pre button {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--glass-2);
+  border: 1px solid var(--stroke);
+  color: var(--text);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.comment-form-row { display: flex; gap: 8px; align-items: center; width: 100%; }
+
+.comment-input-wrap { position: relative; flex: 1; min-width: 0; }
+.comment-form .comment-input-wrap .input { padding-right: 46px; }
+
+/* Anhängen-Button (Paperclip-SVG) im Glas-Stil, rechts im Textfeld */
+.attach-btn {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+.attach-btn:hover {
+  color: var(--cyan);
+  border-color: var(--cyan);
+  background: rgba(46, 230, 214, 0.08);
+}
+.attach-btn:active { transform: translateY(-50%) scale(0.92); }
+
 .pick-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);

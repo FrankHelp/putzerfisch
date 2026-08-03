@@ -62,6 +62,7 @@ CREATE TABLE IF NOT EXISTS logs (
   minutes       INTEGER NOT NULL DEFAULT 0,
   note          TEXT NOT NULL DEFAULT '',
   bonuses       TEXT NOT NULL DEFAULT '[]',
+  photo         TEXT,
   created_at    TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_logs_created ON logs(created_at DESC);
@@ -81,6 +82,7 @@ CREATE TABLE IF NOT EXISTS comments (
   log_id     INTEGER NOT NULL REFERENCES logs(id) ON DELETE CASCADE,
   user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   text       TEXT NOT NULL,
+  photo      TEXT,
   created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_comments_log ON comments(log_id);
@@ -119,6 +121,14 @@ CREATE TABLE IF NOT EXISTS badges (
   UNIQUE(user_id, code)
 );
 `);
+
+// ---- Migrationen für bestehende Datenbanken -------------------------------
+function ensureColumn(table, column, ddl) {
+  const cols = db.prepare(`PRAGMA table_info(${table})`).all().map((c) => c.name);
+  if (!cols.includes(column)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${ddl}`);
+}
+ensureColumn('logs', 'photo', 'photo TEXT');
+ensureColumn('comments', 'photo', 'photo TEXT');
 
 // ---- Seed des Aktivitäten-Katalogs (idempotent) --------------------------
 const seedStmt = db.prepare(`

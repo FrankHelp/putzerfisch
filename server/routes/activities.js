@@ -3,6 +3,7 @@ import { db } from '../db.js';
 import { requireAuth } from '../auth.js';
 import { CATEGORIES } from '../catalog.js';
 import { computePoints, updateStreak, checkBadges, rankFor, dayKey } from '../game.js';
+import { savePhoto, deletePhoto } from '../storage.js';
 import { publicUser } from './auth.js';
 
 export const router = Router();
@@ -63,12 +64,19 @@ router.get('/:id/preview', requireAuth, (req, res) => {
   res.json({ basePoints: activity.points, points, bonuses });
 });
 
-/** Putzaktion eintragen. */
+/** Putzaktion eintragen (Foto optional). */
 router.post('/log', requireAuth, (req, res) => {
   const activityId = Number(req.body?.activityId);
   const note = String(req.body?.note ?? '').trim().slice(0, 240);
   const activity = db.prepare('SELECT * FROM activities WHERE id = ?').get(activityId);
   if (!activity) return res.status(400).json({ error: 'Diese Aktivität kenne ich nicht.' });
+
+  let photo = null;
+  try {
+    photo = savePhoto(req.body?.photo, req.user.id);
+  } catch (e) {
+    return res.status(400).json({ error: e.message });
+  }
 
   const before = rankFor(req.user.xp);
   const { streak } = updateStreak(db, req.user);
@@ -77,12 +85,12 @@ router.post('/log', requireAuth, (req, res) => {
   const info = db
     .prepare(
       `INSERT INTO logs (user_id, wg_id, activity_id, activity_name, icon, category,
-                         base_points, points, minutes, note, bonuses, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+                         base_points, points, minutes, note, bonuses, photo, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .run(
       req.user.id, req.user.wg_id, activity.id, activity.name, activity.icon, activity.category,
-      activity.points, points, activity.minutes, note, JSON.stringify(bonuses), new Date().toISOString()
+      activity.points, points, activity.minutes, note, JSON.stringify(bonuses), photo, new Date().toISOString()
     );
 
   db.prepare('UPDATE users SET xp = xp + ? WHERE id = ?').run(points, req.user.id);
@@ -111,5 +119,6 @@ router.delete('/log/:id', requireAuth, (req, res) => {
 
   db.prepare('DELETE FROM logs WHERE id = ?').run(log.id);
   db.prepare('UPDATE users SET xp = MAX(0, xp - ?) WHERE id = ?').run(log.points, req.user.id);
+  deletePhoto(log.photo); // Aufräumen erst nach erfolgreichem Löschen.
   res.json({ user: publicUser(db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id)) });
 });
