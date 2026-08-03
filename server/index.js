@@ -17,7 +17,7 @@ import { CATEGORIES } from './catalog.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
-const PORT = Number(process.env.PORT || 4000);
+const PORT = Number(process.env.PORT || 4321);
 
 app.use(cors());
 app.use(express.json({ limit: '64kb' }));

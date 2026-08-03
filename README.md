@@ -13,7 +13,7 @@ Emojis reagieren und kommentieren können.
 ```bash
 npm install          # installiert Server + Client (npm workspaces)
 npm run seed:demo    # optional: Demo-WGs, Nutzer und Feed-Historie anlegen
-npm run dev          # API auf :4000, Frontend auf :5173
+npm run dev          # API auf :4321, Frontend auf :5173
 ```
 
 Dann `http://localhost:5173` öffnen.
@@ -33,7 +33,7 @@ Unter iOS/Android lässt sich die Seite über „Zum Home-Bildschirm“ als App 
 
 ```bash
 npm run build        # Frontend nach client/dist bauen
-npm start            # ein Prozess auf :4000 liefert API + Frontend aus
+npm start            # ein Prozess auf :4321 liefert API + Frontend aus
 ```
 
 Für einen echten Deploy unbedingt ein festes Token-Secret setzen, sonst wird eines generiert
@@ -118,7 +118,7 @@ Verschieben lässt sie sich per `PUTZAPP_DB=/pfad/zur.db`.
 
 | Variable | Standard | Zweck |
 |---|---|---|
-| `PORT` | `4000` | Port der API |
+| `PORT` | `4321` | Port der API |
 | `PUTZAPP_SECRET` | generiert | Signier-Secret für Tokens |
 | `PUTZAPP_DB` | `server/putzapp.db` | Pfad zur Datenbank |
 | `PUTZAPP_APPROVE_VOTES` | `5` | Stimmen, bis ein Vorschlag in den Katalog wandert |

@@ -196,7 +196,8 @@ function LigaBoard({ data }) {
           <div className="lb-main">
             <div className="lb-name">{w.name}</div>
             <div className="lb-sub">
-              {w.members} Bewohner · gesamt {num(w.total)} · {w.reef.state.icon} {w.reef.state.label}
+              {w.members} Bewohner · gesamt {num(w.total)}
+              {w.reef?.state && ` · ${w.reef.state.icon} ${w.reef.state.label}`}
             </div>
           </div>
           <div className="lb-points">
