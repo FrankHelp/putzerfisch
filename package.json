@@ -1,0 +1,24 @@
+{
+  "name": "putzapp",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Putzerfisch – gamifizierte Putz-App für WGs",
+  "workspaces": [
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "dev": "concurrently -n API,WEB -c cyan,magenta \"npm run dev -w server\" \"npm run dev -w client\"",
+    "build": "npm run build -w client",
+    "start": "cross-env NODE_ENV=production node server/index.js",
+    "seed:demo": "node server/seedDemo.js"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  }
+}
