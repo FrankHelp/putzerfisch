@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useApp } from './state.jsx';
 import { useRoute, navigate } from './router.jsx';
 import { Ocean, Toasts, Sheet, Avatar } from './components/ui.jsx';
 import { initSoundSystem, startMusic, getSoundEnabled, setSoundEnabled } from './sound.js';
+import { isStandalone, pushState, enablePush, disablePush } from './push.js';
 import Inbox from './components/Inbox.jsx';
 import Login from './pages/Login.jsx';
 import LogDetail from './pages/LogDetail.jsx';
@@ -152,7 +153,78 @@ function SettingsIcon({ size = 18 }) {
   );
 }
 
-/* ---------- Settings-Modal (aktuell nur Sound) ---------- */
+/* ---------- Push-Benachrichtigungen (Riffpost ans Handy) ---------- */
+function PushSetting() {
+  const { toast } = useApp();
+  const [state, setState] = useState('loading');
+  const [busy, setBusy] = useState(false);
+  const standalone = isStandalone();
+
+  const refresh = useCallback(async () => {
+    try {
+      setState(await pushState());
+    } catch {
+      setState('unsupported');
+    }
+  }, []);
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
+
+  const toggle = async () => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      if (state === 'on') {
+        await disablePush();
+        setState('off');
+      } else {
+        await enablePush();
+        toast('🔔 Riffpost kommt jetzt auch im Hintergrund an.');
+        setState('on');
+      }
+    } catch (e) {
+      toast(e.message, 'err');
+      refresh();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const on = state === 'on';
+  const hints = {
+    unsupported: 'Dieses Gerät kann keine Push-Benachrichtigungen.',
+    denied: 'In den System-Einstellungen unter „Putzerfisch“ → Benachrichtigungen erlauben.',
+    off: standalone
+      ? 'Tippen, um Riffpost auch im Hintergrund zu bekommen.'
+      : 'Auf dem iPhone erst zum Homescreen hinzufügen (Teilen → Zum Home-Bildschirm), dann hier aktivieren.',
+  };
+
+  return (
+    <div className="row" style={{ marginTop: 14, alignItems: 'center' }}>
+      <div className="grow">
+        <div style={{ fontWeight: 800, fontSize: 15 }}>🔔 Benachrichtigungen</div>
+        <div className="faint" style={{ fontSize: 12, fontWeight: 700, marginTop: 1 }}>
+          {state === 'loading' ? '…' : on ? 'Riffpost-Push ist an' : (hints[state] ?? '')}
+        </div>
+      </div>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={on}
+        aria-label="Push-Benachrichtigungen an/aus"
+        className={`switch ${on ? 'on' : ''}`}
+        disabled={busy || state === 'loading' || state === 'unsupported' || state === 'denied'}
+        onClick={toggle}
+      >
+        <span className="knob" />
+      </button>
+    </div>
+  );
+}
+
+/* ---------- Settings-Modal (Sound + Push) ---------- */
 function SettingsSheet({ open, onClose, soundOn, onToggleSound }) {
   return (
     <Sheet open={open} onClose={onClose} title="Einstellungen">
@@ -174,6 +246,7 @@ function SettingsSheet({ open, onClose, soundOn, onToggleSound }) {
           <span className="knob" />
         </button>
       </div>
+      <PushSetting />
     </Sheet>
   );
 }

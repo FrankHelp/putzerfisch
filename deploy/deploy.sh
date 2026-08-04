@@ -13,7 +13,7 @@ if [ ! -d .git ]; then
   echo "    Einmalig auf dem Server einrichten (SETUP.md Schritt 2):"
   echo "      sudo mkdir -p /opt/putzerfisch && sudo chown \$USER /opt/putzerfisch"
   echo "      cd /opt/putzerfisch && git clone git@github.com:FrankHelp/putzerfisch.git ."
-  echo "      cp .env.example .env   # PUTZAPP_SECRET setzen!"
+  echo "      cp .env.example .env   # PUTZAPP_SECRET setzen (+ VAPID-* für Push, siehe SETUP.md 3a)"
   exit 1
 fi
 

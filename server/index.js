@@ -13,6 +13,7 @@ import { router as wgRoutes } from './routes/wg.js';
 import { router as suggestionRoutes } from './routes/suggestions.js';
 import { router as userRoutes } from './routes/users.js';
 import { router as notificationRoutes } from './routes/notifications.js';
+import { router as pushRoutes } from './routes/push.js';
 import { RANKS, BADGES } from './game.js';
 import { CATEGORIES } from './catalog.js';
 import { uploadsDir } from './storage.js';
@@ -34,6 +35,7 @@ app.use('/api/wg', wgRoutes);
 app.use('/api/suggestions', suggestionRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/push', pushRoutes);
 
 app.get('/api/meta/game', (_req, res) => res.json({ ranks: RANKS, badges: BADGES, categories: CATEGORIES }));
 app.get('/api/health', (_req, res) => res.json({ ok: true }));

@@ -60,6 +60,30 @@ Ohne Secret generiert die App selbst eines und legt es in der DB ab – das
 überlebt Deploys, weil die DB persistent ist. Explizit setzen ist trotzdem
 empfohlen.
 
+### 3a. Push-Benachrichtigungen aktivieren (optional, empfohlen)
+
+Damit die Riffpost auch als Push-Benachrichtigung am Handy ankommt (iOS:
+App zum Homescreen hinzufügen, iOS 16.4+), braucht der Server ein VAPID-
+Schlüsselpaar. Einmalig erzeugen und in `.env` eintragen:
+
+```bash
+npx web-push generate-vapid-keys --json
+# Ausgabe z. B.:
+# { "publicKey": "BEl...", "privateKey": "q1x..." }
+```
+
+Dann in der `.env` (gleiche Zeilen wie in `.env.example`):
+
+```
+VAPID_PUBLIC_KEY=BEl...
+VAPID_PRIVATE_KEY=q1x...
+VAPID_SUBJECT=mailto:deine@email.de
+```
+
+Die Schlüssel bleiben dauerhaft gültig – einmal eingetragen, nie wieder
+ändern (sonst verlieren alle Handys ihre Push-Abos). Danach neu deployen
+bzw. `docker compose up -d --build`.
+
 ## 4. App starten (erster Lauf)
 
 ```bash
@@ -188,3 +212,5 @@ tar czf putzapp-backup-$(date +%F).tar.gz /opt/putzerfisch/data
 | Healthcheck im Deploy schlägt fehl | `docker compose logs app` auf dem Server ansehen |
 | SSE/Muschel aktualisiert nicht | `proxy_buffering off`-Block prüfen (nginx/putzerfisch.conf) |
 | Tokens nach Deploy ungültig | `PUTZAPP_SECRET` in `.env` fehlt/ändert sich – siehe Schritt 3 |
+| Push-Button meldet „VAPID fehlt“ | `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY` in `.env` setzen (Schritt 3a) und neu deployen |
+| Keine Push auf dem iPhone | App muss zum Homescreen hinzugefügt sein (iOS 16.4+); Berechtigung unter Einstellungen → „Putzerfisch“ → Benachrichtigungen prüfen |

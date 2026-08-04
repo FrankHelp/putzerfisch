@@ -136,6 +136,17 @@ CREATE TABLE IF NOT EXISTS notifications (
 );
 CREATE INDEX IF NOT EXISTS idx_notif_user   ON notifications(user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_notif_unread ON notifications(user_id, read_at);
+
+-- Push-Abos: ein Gerät pro Zeile, endpoint ist das Gerät und damit eindeutig.
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  endpoint   TEXT NOT NULL UNIQUE,
+  p256dh     TEXT NOT NULL,
+  auth       TEXT NOT NULL,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_push_user ON push_subscriptions(user_id);
 `);
 
 // ---- Migrationen für bestehende Datenbanken -------------------------------

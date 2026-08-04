@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { api, setToken, getToken } from './api.js';
+import { disablePush } from './push.js';
 
 const AppCtx = createContext(null);
 export const useApp = () => useContext(AppCtx);
@@ -46,6 +47,9 @@ export function AppProvider({ children }) {
   }, []);
 
   const logout = useCallback(() => {
+    // Push-Abo entfernen, bevor der Token erlischt – sonst bekommt der
+    // nächste Nutzer auf diesem Gerät die alten Riffpost-Pushes.
+    disablePush();
     setToken(null);
     setUser(null);
     setUnread(0);

@@ -37,7 +37,7 @@ export const api = {
   get: (p) => request(p),
   post: (p, body) => request(p, { method: 'POST', body: body ?? {} }),
   patch: (p, body) => request(p, { method: 'PATCH', body: body ?? {} }),
-  del: (p) => request(p, { method: 'DELETE' }),
+  del: (p, body) => request(p, { method: 'DELETE', body }),
 };
 
 // ---- Formatierung ------------------------------------------------------
