@@ -196,6 +196,47 @@ h1, h2, h3, h4 {
   font-weight: 600;
 }
 
+/* ---------- Add-Kopf mit Plan-Toggle ---------- */
+.add-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 6px 0 2px;
+}
+
+.add-head .screen-title {
+  margin: 0;
+  min-width: 0;
+}
+
+.plan-toggle {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 13px;
+  border-radius: 999px;
+  background: var(--glass);
+  border: 1px solid var(--stroke);
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+  transition: all 0.22s cubic-bezier(0.2, 0.9, 0.25, 1);
+}
+
+.plan-toggle .ic { font-size: 15px; line-height: 1; }
+
+.plan-toggle:active { transform: scale(0.92); }
+
+.plan-toggle.on {
+  background: linear-gradient(135deg, rgba(46, 230, 214, 0.22), rgba(90, 209, 255, 0.12));
+  border-color: var(--cyan);
+  color: var(--cyan);
+  box-shadow: 0 0 18px rgba(46, 230, 214, 0.28), inset 0 0 12px rgba(46, 230, 214, 0.08);
+}
+
 /* ---------- Kopfzeile ---------- */
 .topbar {
   position: sticky;
@@ -631,6 +672,46 @@ textarea.input { resize: vertical; min-height: 76px; line-height: 1.5; }
   0%   { transform: scale(0.85); opacity: 0.8; }
   70%  { transform: scale(1.25); opacity: 0; }
   100% { opacity: 0; }
+}
+
+/* ---------- Plan-FAB (taucht unten rechts auf) ---------- */
+.plan-fab {
+  position: fixed;
+  right: calc((100vw - min(480px, 100vw)) / 2 + 16px);
+  bottom: calc(var(--tab-h) + var(--safe-b) + 18px);
+  z-index: 45;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 14px 18px 14px 20px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--cyan), var(--aqua));
+  color: #04202b;
+  font-weight: 900;
+  font-size: 15px;
+  box-shadow: 0 12px 30px -8px rgba(46, 230, 214, 0.9), 0 6px 16px rgba(0, 0, 0, 0.45);
+  animation: popUp 0.32s cubic-bezier(0.2, 1.4, 0.4, 1);
+  transition: transform 0.15s ease;
+}
+
+.plan-fab:active { transform: scale(0.94); }
+
+.plan-fab .count {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: rgba(4, 32, 43, 0.85);
+  color: var(--cyan);
+  font-size: 12.5px;
+  font-weight: 900;
+}
+
+@keyframes popUp {
+  from { transform: translateY(26px) scale(0.8); opacity: 0; }
+  to   { transform: none; opacity: 1; }
 }
 
 /* ---------- Feed ---------- */
@@ -1094,6 +1175,83 @@ textarea.input { resize: vertical; min-height: 76px; line-height: 1.5; }
 .act-row .ic { font-size: 25px; flex: none; }
 .act-row .nm { flex: 1; font-weight: 800; font-size: 14.5px; line-height: 1.25; }
 .act-row .sub { font-size: 11.5px; color: var(--faint); font-weight: 700; margin-top: 1px; }
+
+/* ---------- Plan-Modus: Checkbox + Auswahl ---------- */
+.plan-check {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(4, 20, 34, 0.6);
+  border: 2px solid var(--stroke-strong);
+  font-size: 14px;
+  font-weight: 900;
+  color: transparent;
+  transition: all 0.2s ease;
+}
+
+.plan-check.on {
+  background: linear-gradient(135deg, var(--cyan), var(--aqua));
+  border-color: transparent;
+  color: #04202b;
+  box-shadow: 0 0 12px rgba(46, 230, 214, 0.55);
+}
+
+.act-row.picked {
+  border-color: var(--cyan);
+  background: rgba(46, 230, 214, 0.1);
+  box-shadow: 0 0 0 1px rgba(46, 230, 214, 0.25);
+}
+
+.plan-item.done {
+  opacity: 0.62;
+}
+
+.plan-item.done .nm {
+  text-decoration: line-through;
+  text-decoration-color: var(--cyan);
+}
+
+.plan-item.done .pts {
+  background: rgba(46, 230, 214, 0.14);
+  border-color: rgba(46, 230, 214, 0.35);
+  color: var(--cyan);
+}
+
+.plan-item:disabled { opacity: 0.6; }
+
+/* ---------- Plan-View: Fortschritt + Aktionen ---------- */
+.plan-progress {
+  margin: 4px 0 14px;
+}
+
+.plan-bar {
+  height: 8px;
+  margin-top: 6px;
+  border-radius: 999px;
+  background: rgba(4, 20, 34, 0.6);
+  border: 1px solid var(--stroke);
+  overflow: hidden;
+}
+
+.plan-bar i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--cyan), var(--aqua));
+  box-shadow: 0 0 10px rgba(46, 230, 214, 0.6);
+  transition: width 0.4s cubic-bezier(0.2, 0.9, 0.25, 1);
+}
+
+.plan-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.plan-actions .btn { flex: 1; }
 
 .pts {
   flex: none;

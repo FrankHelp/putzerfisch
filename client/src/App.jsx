@@ -8,6 +8,7 @@ import Login from './pages/Login.jsx';
 import LogDetail from './pages/LogDetail.jsx';
 import Feed from './pages/Feed.jsx';
 import Add from './pages/Add.jsx';
+import Plan from './pages/Plan.jsx';
 import Board from './pages/Board.jsx';
 import Ideas from './pages/Ideas.jsx';
 import Profile from './pages/Profile.jsx';
@@ -81,6 +82,8 @@ function Screen({ view, param }) {
   switch (view) {
     case 'add':
       return <Add />;
+    case 'plan':
+      return <Plan />;
     case 'board':
       return <Board />;
     case 'ideas':

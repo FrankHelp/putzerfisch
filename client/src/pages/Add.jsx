@@ -4,9 +4,12 @@ import { useApp } from '../state.jsx';
 import { navigate } from '../router.jsx';
 import { Sheet, Empty, Skeletons, Confetti, CountUp } from '../components/ui.jsx';
 import { compressToJpegDataUrl } from '../photo.js';
+import { usePlan, setPlanMode, togglePlanItem } from '../plan.js';
 
 export default function Add() {
   const { user, setUser, toast } = useApp();
+  const plan = usePlan();
+  const planMode = plan.mode;
   const [categories, setCategories] = useState([]);
   const [query, setQuery] = useState('');
   const [activeCat, setActiveCat] = useState(null);
@@ -101,6 +104,13 @@ export default function Add() {
 
   const catById = useMemo(() => Object.fromEntries(categories.map((c) => [c.id, c])), [categories]);
   const browsing = query.trim() || activeCat;
+  const picked = useMemo(() => new Set(plan.items.map((x) => x.id)), [plan.items]);
+
+  const onTogglePlan = () => {
+    setPlanMode(!planMode);
+    if (planMode) toast('Plan-Modus aus – Auswahl bleibt erhalten.');
+    else toast('Plan-Modus an – antippen sammelt Aufgaben 📋');
+  };
 
   if (celebration)
     return (
@@ -116,8 +126,23 @@ export default function Add() {
 
   return (
     <div className="screen">
-      <h1 className="screen-title">Was hast du geschafft?</h1>
-      <p className="screen-sub">Such danach oder wähl eine Zone im Riff.</p>
+      <div className="add-head">
+        <h1 className="screen-title">{planMode ? 'Was gehst du heute an?' : 'Was hast du geschafft?'}</h1>
+        <button
+          className={`plan-toggle ${planMode ? 'on' : ''}`}
+          onClick={onTogglePlan}
+          aria-pressed={planMode}
+          title={planMode ? 'Plan-Modus aus' : 'Plan-Modus an'}
+        >
+          <span className="ic">📋</span>
+          <span>Plan{plan.items.length > 0 ? ` · ${plan.items.length}` : ''}</span>
+        </button>
+      </div>
+      <p className="screen-sub">
+        {planMode
+          ? 'Such danach oder wähl eine Zone im Riff – was du antippst, wandert auf den Plan.'
+          : 'Such danach oder wähl eine Zone im Riff.'}
+      </p>
 
       <div className="search-wrap" style={{ marginBottom: 14 }}>
         <span className="icon">🔍</span>
@@ -172,25 +197,29 @@ export default function Add() {
       )}
 
       {browsing &&
-        results?.map((a, i) => (
-          <button
-            key={a.id}
-            className="act-row"
-            style={{ animationDelay: `${Math.min(i, 10) * 30}ms` }}
-            onClick={() => openActivity(a)}
-          >
-            <span className="ic">{a.icon}</span>
-            <span className="grow">
-              <span className="nm">
-                {a.name} {a.communityMade && '✨'}
+        results?.map((a, i) => {
+          const isPicked = picked.has(a.id);
+          return (
+            <button
+              key={a.id}
+              className={`act-row ${planMode ? 'plan-pick' : ''} ${isPicked ? 'picked' : ''}`}
+              style={{ animationDelay: `${Math.min(i, 10) * 30}ms` }}
+              onClick={() => (planMode ? togglePlanItem(a) : openActivity(a))}
+            >
+              {planMode && <span className={`plan-check ${isPicked ? 'on' : ''}`}>{isPicked ? '✓' : ''}</span>}
+              <span className="ic">{a.icon}</span>
+              <span className="grow">
+                <span className="nm">
+                  {a.name} {a.communityMade && '✨'}
+                </span>
+                <span className="sub">
+                  {catById[a.category]?.label ?? a.category} · {a.minutes} Min.
+                </span>
               </span>
-              <span className="sub">
-                {catById[a.category]?.label ?? a.category} · {a.minutes} Min.
-              </span>
-            </span>
-            <span className="pts">{a.points} P</span>
-          </button>
-        ))}
+              <span className="pts">{a.points} P</span>
+            </button>
+          );
+        })}
 
       {/* Bestätigungs-Sheet */}
       <Sheet open={!!selected} onClose={() => setSelected(null)} title={selected?.name}>
@@ -256,6 +285,13 @@ export default function Add() {
           </>
         )}
       </Sheet>
+
+      {planMode && plan.items.length > 0 && (
+        <button className="plan-fab" onClick={() => navigate('/plan')}>
+          <span>📋 Plan starten</span>
+          <span className="count">{plan.items.length}</span>
+        </button>
+      )}
     </div>
   );
 }
