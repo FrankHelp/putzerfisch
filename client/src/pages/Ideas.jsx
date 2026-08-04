@@ -166,7 +166,7 @@ function Compose({ open, onClose, onCreated }) {
   const { toast } = useApp();
   const [categories, setCategories] = useState([]);
   const [name, setName] = useState('');
-  const [category, setCategory] = useState('kueche');
+  const [category, setCategory] = useState('kombuese');
   const [icon, setIcon] = useState('🧽');
   const [points, setPoints] = useState(15);
   const [minutes, setMinutes] = useState(10);

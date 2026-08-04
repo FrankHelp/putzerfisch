@@ -80,10 +80,10 @@ export function checkBadges(db, userId, ctx = {}) {
   }
   if (ctx.points >= 50) push('big_one');
 
-  if (count("SELECT COUNT(*) n FROM logs WHERE user_id = ? AND category = 'kueche'", userId) >= 10) push('kitchen_boss');
-  if (count("SELECT COUNT(*) n FROM logs WHERE user_id = ? AND category = 'bad'", userId) >= 10) push('tile_king');
-  if (count("SELECT COUNT(*) n FROM logs WHERE user_id = ? AND category = 'muell'", userId) >= 20) push('trash_tycoon');
-  if (count('SELECT COUNT(DISTINCT category) n FROM logs WHERE user_id = ?', userId) >= 9) push('all_rounder');
+  if (count("SELECT COUNT(*) n FROM logs WHERE user_id = ? AND category = 'kombuese'", userId) >= 10) push('kitchen_boss');
+  if (count("SELECT COUNT(*) n FROM logs WHERE user_id = ? AND category = 'riffspalte'", userId) >= 10) push('tile_king');
+  if (count("SELECT COUNT(*) n FROM logs WHERE user_id = ? AND category = 'strandgut'", userId) >= 20) push('trash_tycoon');
+  if (count('SELECT COUNT(DISTINCT category) n FROM logs WHERE user_id = ?', userId) >= 8) push('all_rounder');
   if (count('SELECT COUNT(*) n FROM comments WHERE user_id = ?', userId) >= 25) push('social_fish');
 
   return earned;
