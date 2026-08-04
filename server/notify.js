@@ -41,7 +41,9 @@ function riffPush(type, logId, text, extra = '') {
  */
 function push(userId, type, info) {
   publish(userId, 'post', { unread: unreadCount(userId), type });
-  if (info) sendPush(userId, info); // fire-and-forget, Fehler fängt sendPush ab
+  // fire-and-forget, Fehler fängt sendPush ab. unread kommt mit: Android zeigt
+  // damit die Zahl am App-Icon (Badge), iOS ignoriert das einfach.
+  if (info) sendPush(userId, { ...info, unread: unreadCount(userId) });
 }
 
 /** Reaktion auf einen fremden Eintrag. */

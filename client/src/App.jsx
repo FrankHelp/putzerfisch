@@ -3,7 +3,7 @@ import { useApp } from './state.jsx';
 import { useRoute, navigate } from './router.jsx';
 import { Ocean, Toasts, Sheet, Avatar } from './components/ui.jsx';
 import { initSoundSystem, startMusic, getSoundEnabled, setSoundEnabled } from './sound.js';
-import { isStandalone, pushState, enablePush, disablePush } from './push.js';
+import { isStandalone, pushState, enablePush, disablePush, installAvailable, installApp } from './push.js';
 import Inbox from './components/Inbox.jsx';
 import Login from './pages/Login.jsx';
 import LogDetail from './pages/LogDetail.jsx';
@@ -154,6 +154,12 @@ function SettingsIcon({ size = 18 }) {
 }
 
 /* ---------- Push-Benachrichtigungen (Riffpost ans Handy) ---------- */
+// iOS zeigt den Push-Prompt nur in der installierten App – der Hinweis soll
+// genau dann erscheinen. Android (Chrome) kann Push auch ohne Installation.
+const isIOS =
+  /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
 function PushSetting() {
   const { toast } = useApp();
   const [state, setState] = useState('loading');
@@ -198,7 +204,9 @@ function PushSetting() {
     denied: 'In den System-Einstellungen unter „Putzerfisch“ → Benachrichtigungen erlauben.',
     off: standalone
       ? 'Tippen, um Riffpost auch im Hintergrund zu bekommen.'
-      : 'Auf dem iPhone erst zum Homescreen hinzufügen (Teilen → Zum Home-Bildschirm), dann hier aktivieren.',
+      : isIOS
+        ? 'Auf dem iPhone erst zum Homescreen hinzufügen (Teilen → Zum Home-Bildschirm), dann hier aktivieren.'
+        : 'Tippen, um Riffpost auch im Hintergrund zu bekommen.',
   };
 
   return (
@@ -224,10 +232,49 @@ function PushSetting() {
   );
 }
 
+/* ---------- App installieren (Android/Chrome; iOS nutzt das Share-Menü) ---------- */
+function InstallRow() {
+  const { toast } = useApp();
+  const [available, setAvailable] = useState(installAvailable());
+
+  useEffect(() => {
+    const onChange = () => setAvailable(installAvailable());
+    window.addEventListener('appinstalled', onChange);
+    return () => window.removeEventListener('appinstalled', onChange);
+  }, []);
+
+  if (!available) return null;
+  return (
+    <div className="row" style={{ marginTop: 14, alignItems: 'center' }}>
+      <div className="grow">
+        <div style={{ fontWeight: 800, fontSize: 15 }}>📲 App installieren</div>
+        <div className="faint" style={{ fontSize: 12, fontWeight: 700, marginTop: 1 }}>
+          Als App auf den Homescreen – mit eigenem Icon & Push-Badge
+        </div>
+      </div>
+      <button
+        type="button"
+        className="btn btn-sm btn-primary"
+        onClick={async () => {
+          try {
+            await installApp();
+            toast('📲 Putzerfisch wird installiert.');
+          } catch (e) {
+            toast(e.message, 'err');
+          }
+        }}
+      >
+        Installieren
+      </button>
+    </div>
+  );
+}
+
 /* ---------- Settings-Modal (Sound + Push) ---------- */
 function SettingsSheet({ open, onClose, soundOn, onToggleSound }) {
   return (
     <Sheet open={open} onClose={onClose} title="Einstellungen">
+      <InstallRow />
       <div className="row" style={{ marginTop: 14, alignItems: 'center' }}>
         <div className="grow">
           <div style={{ fontWeight: 800, fontSize: 15 }}>🔊 Sound</div>

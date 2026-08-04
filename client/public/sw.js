@@ -3,6 +3,9 @@
  * Kümmert sich nur um Push-Benachrichtigungen: Die Riffpost kommt im
  * Hintergrund an, wird angezeigt und öffnet beim Tippen die richtige Seite.
  * Bewusst kein Offline-Caching – die App lädt frisch, wenn sie geöffnet wird.
+ *
+ * Badge (Zahl am App-Icon) kann nur Android; iOS ignoriert die Felder
+ * einfach. Deshalb überall vorsichtige Feature-Erkennung.
  */
 
 self.addEventListener('install', () => self.skipWaiting());
@@ -15,12 +18,16 @@ self.addEventListener('push', (e) => {
   } catch {
     /* kaputtes Payload ignorieren – Standardtext zeigen */
   }
+  if (self.navigator.setAppBadge) {
+    self.navigator.setAppBadge(Number(data.unread) || 1).catch(() => {});
+  }
   e.waitUntil(
     self.registration.showNotification(data.title || '🐚 Riffpost', {
       body: data.body || 'Jemand war im Riff aktiv.',
       icon: '/icon-192.png',
       badge: '/icon-192.png',
       tag: data.tag || 'riffpost',
+      vibrate: [120, 60, 120],
       data: { url: data.url || '/#/feed' },
     })
   );
@@ -28,6 +35,8 @@ self.addEventListener('push', (e) => {
 
 self.addEventListener('notificationclick', (e) => {
   e.notification.close();
+  // Badge erstmal weg – die App gleicht ihn beim Öffnen mit dem Server ab.
+  if (self.navigator.clearAppBadge) self.navigator.clearAppBadge().catch(() => {});
   const url = e.notification.data?.url || '/#/feed';
   e.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {

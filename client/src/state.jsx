@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { api, setToken, getToken } from './api.js';
-import { disablePush } from './push.js';
+import { disablePush, syncBadge } from './push.js';
 
 const AppCtx = createContext(null);
 export const useApp = () => useContext(AppCtx);
@@ -50,6 +50,7 @@ export function AppProvider({ children }) {
     // Push-Abo entfernen, bevor der Token erlischt – sonst bekommt der
     // nächste Nutzer auf diesem Gerät die alten Riffpost-Pushes.
     disablePush();
+    syncBadge(0);
     setToken(null);
     setUser(null);
     setUnread(0);
@@ -105,6 +106,12 @@ export function AppProvider({ children }) {
       window.removeEventListener('focus', onFocus);
     };
   }, [userId, refreshUnread]);
+
+  // Badge am App-Icon (Android): immer den ungelesenen Zähler zeigen.
+  // iOS kann das nicht und ignoriert es still.
+  useEffect(() => {
+    syncBadge(unread);
+  }, [unread]);
 
   const refreshUser = useCallback(async () => {
     const d = await api.get('/auth/me');

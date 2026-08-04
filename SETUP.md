@@ -62,9 +62,8 @@ empfohlen.
 
 ### 3a. Push-Benachrichtigungen aktivieren (optional, empfohlen)
 
-Damit die Riffpost auch als Push-Benachrichtigung am Handy ankommt (iOS:
-App zum Homescreen hinzufügen, iOS 16.4+), braucht der Server ein VAPID-
-Schlüsselpaar. Einmalig erzeugen und in `.env` eintragen:
+Damit die Riffpost auch als Push-Benachrichtigung am Handy ankommt, braucht
+der Server ein VAPID-Schlüsselpaar. Einmalig erzeugen und in `.env` eintragen:
 
 ```bash
 npx web-push generate-vapid-keys --json
@@ -83,6 +82,12 @@ VAPID_SUBJECT=mailto:deine@email.de
 Die Schlüssel bleiben dauerhaft gültig – einmal eingetragen, nie wieder
 ändern (sonst verlieren alle Handys ihre Push-Abos). Danach neu deployen
 bzw. `docker compose up -d --build`.
+
+Geräte: Funktioniert auf Android (Chrome – im Browser-Tab oder als
+installierte App; Einstellungen bieten dort einen „App installieren“-Button
+und das Icon zeigt die ungelesene Zahl als Badge) und auf iOS (16.4+,
+App muss zum Homescreen hinzugefügt sein, Aktivierung über Einstellungen →
+Benachrichtigungen).
 
 ## 4. App starten (erster Lauf)
 
@@ -214,3 +219,4 @@ tar czf putzapp-backup-$(date +%F).tar.gz /opt/putzerfisch/data
 | Tokens nach Deploy ungültig | `PUTZAPP_SECRET` in `.env` fehlt/ändert sich – siehe Schritt 3 |
 | Push-Button meldet „VAPID fehlt“ | `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY` in `.env` setzen (Schritt 3a) und neu deployen |
 | Keine Push auf dem iPhone | App muss zum Homescreen hinzugefügt sein (iOS 16.4+); Berechtigung unter Einstellungen → „Putzerfisch“ → Benachrichtigungen prüfen |
+| Kein „Installieren“-Button in den Einstellungen (Android) | Chrome zeigt den Prompt nur, wenn die PWA-Kriterien erfüllt sind (Manifest + Icon ≥ 192 px + HTTPS). Alternativ: Chrome-Menü → „Zum Startbildschirm hinzufügen“ |

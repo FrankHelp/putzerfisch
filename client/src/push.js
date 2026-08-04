@@ -25,6 +25,38 @@ function urlBase64ToUint8Array(base64) {
   return Uint8Array.from([...raw].map((c) => c.charCodeAt(0)));
 }
 
+/* Install-Prompt für Android/Chrome: Der Browser meldet sich früh, bevor der
+ * Nutzer irgendwas angefasst hat – wir fangen das ab und bieten den Button
+ * in den Einstellungen an. iOS hat so ein Ereignis nicht (Share-Menü). */
+let deferredPrompt = null;
+if (typeof window !== 'undefined' && 'beforeinstallprompt' in window) {
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+  });
+}
+
+/** Gibt es gerade einen nutzbaren Install-Prompt? (Android/Chrome, nicht installiert) */
+export function installAvailable() {
+  return Boolean(deferredPrompt) && !isStandalone();
+}
+
+/** Install-Prompt anzeigen. Muss aus einer User-Geste laufen. */
+export async function installApp() {
+  if (!deferredPrompt) throw new Error('Die Installation ist in diesem Browser nicht verfügbar.');
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt = null;
+}
+
+/**
+ * Zahl am App-Icon (Badge) – nur Android kann das, iOS nicht.
+ * 0 = Badge weg. Still, wenn der Browser es nicht kann.
+ */
+export function syncBadge(n) {
+  if (navigator.setAppBadge) navigator.setAppBadge(n || 0).catch(() => {});
+}
+
 /** Läuft die App als installierte PWA (Vollbild, eigenes Icon)? */
 export function isStandalone() {
   return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
