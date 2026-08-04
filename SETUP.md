@@ -74,40 +74,38 @@ erst über nginx.
 
 ## 5. HTTPS mit nginx + Let's Encrypt
 
-nginx und certbot installieren:
+Voraussetzung: Der A-Record der Domain zeigt auf die Server-IP.
+
+**Einfachster Weg – Setup-Skript** (installiert nginx + certbot, erstellt das
+Zertifikat, aktiviert HTTPS, richtet Auto-Renewal ein):
+
+```bash
+cd /opt/putzerfisch && git pull          # holt deploy/setup-nginx.sh
+sudo bash deploy/setup-nginx.sh putz.deine-domain.de
+```
+
+**Von Hand** (was das Skript tut):
 
 ```bash
 sudo apt update && sudo apt install -y nginx certbot
-```
 
-**Schritt A – HTTP-Config aktivieren** (damit certbot die Challenge beantworten kann):
-
-```bash
+# A – HTTP-Config aktivieren (damit certbot die Challenge beantworten kann):
 sudo cp nginx/putzerfisch-http.conf /etc/nginx/sites-available/putzerfisch
 sudo nano /etc/nginx/sites-available/putzerfisch   # putzapp.example.com -> DEINE Domain
 sudo ln -s /etc/nginx/sites-available/putzerfisch /etc/nginx/sites-enabled/
 sudo rm /etc/nginx/sites-enabled/default            # Default-Site weg
 sudo mkdir -p /var/www/certbot
 sudo nginx -t && sudo systemctl reload nginx
-```
 
-**Schritt B – Zertifikat erstellen** (webroot-Methode, erneuert sich automatisch):
-
-```bash
+# B – Zertifikat erstellen (webroot-Methode, erneuert sich automatisch):
 sudo certbot certonly --webroot -w /var/www/certbot -d putz.deine-domain.de
-```
 
-**Schritt C – HTTPS-Config aktivieren:**
-
-```bash
+# C – HTTPS-Config aktivieren:
 sudo cp nginx/putzerfisch.conf /etc/nginx/sites-available/putzerfisch
 sudo nano /etc/nginx/sites-available/putzerfisch   # Domain ersetzen (2x im 443-Block)
 sudo nginx -t && sudo systemctl reload nginx
-```
 
-**Schritt D – nginx nach jedem Renewal neu laden lassen:**
-
-```bash
+# D – nginx nach jedem Renewal neu laden lassen:
 sudo mkdir -p /etc/letsencrypt/renewal-hooks/deploy
 sudo tee /etc/letsencrypt/renewal-hooks/deploy/nginx-reload.sh >/dev/null <<'EOF'
 #!/bin/sh
@@ -116,12 +114,8 @@ EOF
 sudo chmod +x /etc/letsencrypt/renewal-hooks/deploy/nginx-reload.sh
 ```
 
-Das Renewal selbst übernimmt der systemd-Timer `certbot.timer` (läuft ab
-Installation automatisch). Test:
-
-```bash
-sudo certbot renew --dry-run
-```
+Das Renewal übernimmt der systemd-Timer `certbot.timer` (läuft ab Installation
+automatisch). Test: `sudo certbot renew --dry-run`
 
 Fertig – https://putz.deine-domain.de sollte die App zeigen.
 
