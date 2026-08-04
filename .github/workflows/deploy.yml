@@ -30,4 +30,4 @@ jobs:
           # port: ${{ secrets.SERVER_PORT }}
           script: |
             cd /opt/putzerfisch
-            ./deploy.sh
+            ./deploy/deploy.sh
