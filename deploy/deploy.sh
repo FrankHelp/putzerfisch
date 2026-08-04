@@ -8,6 +8,15 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."   # Projekt-Root (/opt/putzerfisch)
 
+if [ ! -d .git ]; then
+  echo "==> FEHLER: Kein Git-Repo gefunden in $(pwd)."
+  echo "    Einmalig auf dem Server einrichten (SETUP.md Schritt 2):"
+  echo "      sudo mkdir -p /opt/putzerfisch && sudo chown \$USER /opt/putzerfisch"
+  echo "      cd /opt/putzerfisch && git clone git@github.com:FrankHelp/putzerfisch.git ."
+  echo "      cp .env.example .env   # PUTZAPP_SECRET setzen!"
+  exit 1
+fi
+
 echo "==> Code aktualisieren"
 git pull --ff-only origin main
 
