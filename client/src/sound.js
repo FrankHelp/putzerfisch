@@ -3,9 +3,14 @@
  * StrictMode-Doppel-Mounts nichts doppelt starten und keine Komponente
  * den Sound "besitzt". Die App ruft nur Funktionen auf.
  *
- * Musik: Autoplay-Versuch direkt beim Start; Browser blocken das aber,
- * solange der Nutzer noch nicht interagiert hat. Deshalb gibt es einen
- * Einmal-Hörer, der die Musik beim ersten Klick/Tipp/Tastendruck startet.
+ * Lazy Loading: Sound ist standardmäßig AUS. Es wird beim App-Start
+ * nichts geladen – erst wenn der Nutzer den Sound in den Einstellungen
+ * einschaltet, werden die Audio-Dateien erzeugt (background_loop.mp3
+ * also erst beim Klick auf den Switch, nicht bei jedem Start).
+ *
+ * Musik: Browser blocken Autoplay, solange der Nutzer noch nicht
+ * interagiert hat. Deshalb gibt es einen Einmal-Hörer, der die Musik
+ * beim ersten Klick/Tipp/Tastendruck startet.
  */
 
 const SOUND_KEY = 'putz:sound'; // '1' = an, '0' = aus – Master-Schalter für Musik + UI-Sounds
@@ -39,8 +44,9 @@ function readSoundEnabled() {
   const raw = localStorage.getItem(SOUND_KEY);
   if (raw === '1') return true;
   if (raw === '0') return false;
-  // Migration: alter Ein/Aus-Toggle (putz:music) entscheidet
-  return localStorage.getItem(MUSIC_KEY) !== '0';
+  // Migration: alter Ein/Aus-Toggle (putz:music) zählt nur, wenn er explizit an war.
+  // Ohne gespeicherten Wert gilt: Sound AUS (Standard).
+  return localStorage.getItem(MUSIC_KEY) === '1';
 }
 
 function readVolume() {
@@ -58,8 +64,14 @@ function makeAudio(src, volume, loop = false) {
   return a;
 }
 
-function ensureAudio() {
+/* Musik-Audio nur anlegen, wenn Sound an ist – background_loop.mp3 wird
+ * also erst beim Einschalten geladen, nicht beim App-Start. */
+function ensureMusic() {
   if (!music) music = makeAudio(FILES.background, musicVolume, true);
+}
+
+/* UI-Sounds lazy beim ersten Play erzeugen (läuft nur bei aktivem Sound). */
+function ensureUiAudio() {
   for (const [name, src] of Object.entries(FILES)) {
     if (name === 'background' || ui[name]) continue;
     ui[name] = makeAudio(src, UI_VOLUME);
@@ -76,25 +88,24 @@ export function setSoundEnabled(on) {
   soundEnabled = !!on;
   localStorage.setItem(SOUND_KEY, soundEnabled ? '1' : '0');
   localStorage.setItem(MUSIC_KEY, soundEnabled ? '1' : '0');
-  ensureAudio();
   if (soundEnabled) {
     // War der Sound vorher aus (evtl. mit Lautstärke 0 gespeichert), wieder hörbar starten
     if (musicVolume <= 0) {
       musicVolume = DEFAULT_MUSIC_VOLUME;
-      music.volume = musicVolume;
     }
     startMusic();
   } else {
     armed = false;
-    music.pause();
+    if (music) music.pause();
   }
 }
 
 /* ---------- Hintergrundmusik ---------- */
 
 export function startMusic() {
-  ensureAudio();
-  if (!soundEnabled || musicVolume <= 0 || !music.paused) return;
+  if (!soundEnabled || musicVolume <= 0) return;
+  ensureMusic();
+  if (!music.paused) return;
   const p = music.play();
   if (p) p.catch(() => armFirstInteraction());
   else armFirstInteraction();
@@ -121,7 +132,7 @@ function armFirstInteraction() {
 
 export function playUi(name) {
   if (!soundEnabled || !FILES[name] || name === 'background') return;
-  ensureAudio();
+  ensureUiAudio();
   const now = performance.now();
   const gap = name === 'swooosh' ? SWOOSH_GAP : POP_GAP;
   if (now - (last.get(name) ?? 0) < gap) return;
@@ -172,7 +183,8 @@ function onInput(e) {
 export function initSoundSystem() {
   if (inited) return;
   inited = true;
-  ensureAudio();
+  // Bewusst KEIN ensureMusic()/ensureUiAudio(): Bei ausgeschaltetem Sound
+  // (Standard) wird keine einzige Audio-Datei geladen.
   window.addEventListener('pointerdown', onPointerDown, { passive: true });
   window.addEventListener('click', onClick, { passive: true });
   window.addEventListener('input', onInput, { passive: true });
