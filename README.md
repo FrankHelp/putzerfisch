@@ -152,6 +152,7 @@ putzapp/
 │   ├── auth.js             scrypt-Hashing, HMAC-signierte Tokens, Middleware
 │   ├── notify.js           Riffpost: wer bekommt was mit (inkl. Drosselung)
 │   ├── events.js           SSE-Verteiler für die Live-Zustellung
+│   ├── seacow.js           „Die dumme Seekuh“: LLM-Moderation + Rate-Limit für Ideen
 │   ├── seedDemo.js         Demo-Datensatz
 │   └── routes/             auth · activities · feed · leaderboard · wg · suggestions · users · notifications
 └── client/                 React 19 + Vite
@@ -178,6 +179,8 @@ Verschieben lässt sie sich per `PUTZAPP_DB=/pfad/zur.db`.
 | `PUTZAPP_DB` | `server/putzapp.db` | Pfad zur Datenbank |
 | `PUTZAPP_UPLOADS` | `server/uploads` | Ablageort für Fotos |
 | `PUTZAPP_APPROVE_VOTES` | `10` | Stimmen, bis ein Vorschlag in den Katalog wandert |
+| `DEEPSEEK_API_KEY` | – | DeepSeek-Key für die Ideen-Moderation („Die dumme Seekuh“); ohne Key keine Prüfung |
+| `DEEPSEEK_MODEL` | `deepseek-v4-flash` | Modell, das die Seekuh verwendet |
 
 ---
 

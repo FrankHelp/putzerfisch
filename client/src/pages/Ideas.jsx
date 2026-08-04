@@ -65,7 +65,8 @@ export default function Ideas() {
 
       <h1 className="screen-title">Ideen-Riff</h1>
       <p className="screen-sub">
-        Schlag neue Aktivitäten vor. Ab {data?.threshold ?? 5} Stimmen wandern sie in den Katalog.
+        Schlag neue Aktivitäten vor. Die dumme Seekuh prüft jede Idee – ab {data?.threshold ?? 10} Stimmen
+        wandern sie in den Katalog.
       </p>
 
       <button className="btn btn-coral btn-block" onClick={() => (user ? setComposing(true) : toast('Erst einloggen.', 'err'))}>
@@ -172,24 +173,45 @@ function Compose({ open, onClose, onCreated }) {
   const [minutes, setMinutes] = useState(10);
   const [description, setDescription] = useState('');
   const [busy, setBusy] = useState(false);
+  const [scRejected, setScRejected] = useState(null); // { message, fails, maxFails }
+  const [cooldown, setCooldown] = useState(0); // Sekunden bis zum nächsten Versuch
 
   useEffect(() => {
     if (open && !categories.length)
       api.get('/activities/categories').then((d) => setCategories(d.categories)).catch(() => {});
   }, [open, categories.length]);
 
+  // Countdown für das Seekuh-Rate-Limit (nach 3 Fehlversuchen: 1 Versuch alle 30 s)
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const t = setInterval(() => setCooldown((c) => Math.max(0, c - 1)), 1000);
+    return () => clearInterval(t);
+  }, [cooldown]);
+
   const submit = async (e) => {
     e.preventDefault();
+    if (busy || cooldown > 0) return;
     setBusy(true);
+    setScRejected(null);
     try {
       await api.post('/suggestions', { name: name.trim(), category, icon, points, minutes, description });
-      toast('Vorschlag eingereicht! Deine eigene Stimme zählt schon. 🫧');
+      haptic('success');
+      toast('Die Seekuh nickt: Deine Idee ist in der Abstimmung! 🦭 Deine Stimme zählt schon.');
       setName('');
       setDescription('');
       onClose();
       onCreated();
     } catch (err) {
-      toast(err.message, 'err');
+      if (err.status === 422) {
+        haptic('warning');
+        setScRejected({ message: err.message, fails: err.fails ?? 3, maxFails: err.maxFails ?? 3 });
+      } else if (err.status === 429) {
+        haptic('error');
+        setScRejected(null);
+        setCooldown(err.retryAfter || 30);
+      } else {
+        toast(err.message, 'err');
+      }
     } finally {
       setBusy(false);
     }
@@ -204,7 +226,10 @@ function Compose({ open, onClose, onCreated }) {
             className="input"
             value={name}
             maxLength={60}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => {
+              setName(e.target.value);
+              if (scRejected) setScRejected(null); // neuer Versuch, neue Chance
+            }}
             placeholder="z. B. Duschvorhang waschen"
             required
           />
@@ -286,8 +311,45 @@ function Compose({ open, onClose, onCreated }) {
           />
         </div>
 
-        <button className="btn btn-primary btn-block" disabled={busy || !name.trim()}>
-          {busy ? '…' : 'Zur Abstimmung stellen'}
+        {busy && (
+          <div className="seacow sc-check">
+            <span className="sc-emoji">🦭</span>
+            <div>
+              <b>Die dumme Seekuh prüft …</b>
+              <p>Ob deine Idee wirklich ins Riff darf.</p>
+            </div>
+          </div>
+        )}
+
+        {scRejected && (
+          <div className="seacow sc-no">
+            <span className="sc-emoji">🦭</span>
+            <div>
+              <b>Die dumme Seekuh schüttelt den Kopf</b>
+              <p>{scRejected.message}</p>
+              <p className="sc-hint">
+                {scRejected.fails >= scRejected.maxFails
+                  ? `Versuch ${scRejected.fails}/${scRejected.maxFails} – jetzt macht sie erstmal Pause.`
+                  : `Versuch ${scRejected.fails}/${scRejected.maxFails} – danach macht sie Pause.`}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {cooldown > 0 && (
+          <div className="seacow sc-pause">
+            <span className="sc-emoji">🦭</span>
+            <div>
+              <b>Die dumme Seekuh verdaut</b>
+              <p>
+                Zu viele verrückte Ideen auf einmal. Nächster Versuch in <b>{cooldown} s</b>.
+              </p>
+            </div>
+          </div>
+        )}
+
+        <button className="btn btn-primary btn-block" disabled={busy || !name.trim() || cooldown > 0}>
+          {busy ? 'Die Seekuh prüft …' : cooldown > 0 ? `Warte ${cooldown} s …` : 'Zur Abstimmung stellen'}
         </button>
       </form>
     </Sheet>

@@ -114,6 +114,18 @@ CREATE TABLE IF NOT EXISTS suggestion_votes (
   PRIMARY KEY (suggestion_id, user_id)
 );
 
+-- „Die dumme Seekuh“: Moderation-Versuche je User. fail_streak zählt
+-- aufeinanderfolgende Ablehnungen und ist die Basis fürs Rate-Limit
+-- (nach 3 Fehlversuchen: 1 Versuch alle 30 Sekunden).
+CREATE TABLE IF NOT EXISTS seacow_attempts (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  accepted   INTEGER NOT NULL DEFAULT 0,
+  fail_streak INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_seacow_user ON seacow_attempts(user_id, id DESC);
+
 CREATE TABLE IF NOT EXISTS badges (
   id         INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,

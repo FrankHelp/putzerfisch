@@ -3,6 +3,7 @@ import { db } from '../db.js';
 import { requireAuth, optionalAuth } from '../auth.js';
 import { CATEGORY_IDS } from '../catalog.js';
 import { awardBadge, rankFor } from '../game.js';
+import { moderateSuggestion, rateLimitCheck, recordAttempt, MAX_FAILS } from '../seacow.js';
 
 export const router = Router();
 
@@ -57,7 +58,7 @@ router.get('/', optionalAuth, (req, res) => {
   res.json({ suggestions: items, threshold: APPROVE_THRESHOLD });
 });
 
-router.post('/', requireAuth, (req, res) => {
+router.post('/', requireAuth, async (req, res) => {
   const name = String(req.body?.name ?? '').trim();
   const category = CATEGORY_IDS.includes(req.body?.category) ? req.body.category : null;
   const icon = String(req.body?.icon ?? '🧽').slice(0, 8) || '🧽';
@@ -69,12 +70,40 @@ router.post('/', requireAuth, (req, res) => {
     return res.status(400).json({ error: 'Name muss 3–60 Zeichen haben.' });
   if (!category) return res.status(400).json({ error: 'Bitte eine gültige Kategorie wählen.' });
 
+  // Rate-Limit: nach 3 Fehlversuchen lässt die Seekuh nur 1 Versuch pro 30 s durch.
+  const limit = rateLimitCheck(req.user.id);
+  if (!limit.allowed)
+    return res.status(429).json({
+      error: `Die dumme Seekuh ist noch am Verdauen. Versuch's in ${limit.retryAfter} s nochmal.`,
+      retryAfter: limit.retryAfter,
+    });
+
   const dupe = db.prepare('SELECT 1 x FROM activities WHERE lower(name) = lower(?)').get(name);
   if (dupe) return res.status(409).json({ error: 'Diese Aktivität gibt es schon im Katalog.' });
   const dupeOpen = db
     .prepare("SELECT 1 x FROM suggestions WHERE lower(name) = lower(?) AND status = 'open'")
     .get(name);
   if (dupeOpen) return res.status(409).json({ error: 'Das hat schon jemand vorgeschlagen – stimm dort mit ab!' });
+
+  // „Die dumme Seekuh“ prüft, ob die Idee ins Riff darf.
+  let ok;
+  try {
+    ok = await moderateSuggestion({ name, description });
+  } catch (err) {
+    console.error('Seekuh-Moderation fehlgeschlagen:', err.message);
+    return res.status(503).json({ error: 'Die dumme Seekuh ist gerade auf Tauchgang. Versuch’s gleich nochmal!' });
+  }
+
+  if (!ok) {
+    const fails = recordAttempt(req.user.id, false);
+    return res.status(422).json({
+      error: 'Das schwimmt hier nicht. Versuch’s nochmal!',
+      rejected: true,
+      fails,
+      maxFails: MAX_FAILS,
+    });
+  }
+  recordAttempt(req.user.id, true);
 
   const info = db
     .prepare(

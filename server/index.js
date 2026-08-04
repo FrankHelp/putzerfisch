@@ -1,3 +1,8 @@
+// .env laden – MUSS vor allen anderen Imports stehen, damit auch db.js,
+// auth.js usw. die Variablen sehen (Einstieg für lokale Entwicklung;
+// in Docker kommen die Vars über env_file herein).
+import 'dotenv/config';
+
 import express from 'express';
 import cors from 'cors';
 import path from 'node:path';
