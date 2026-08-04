@@ -132,21 +132,45 @@ const recentLogs = db
   .all()
   .map((r) => r.id);
 
+// Riffpost entsteht hier gleich mit: alles, was älter als zwei Tage ist,
+// gilt als gelesen – so hat die Muschel beim ersten Blick ein paar frische
+// Perlen, ohne dass es nach hunderten Altlasten aussieht.
+const FRESH_AFTER = Date.now() - 2 * 86400000;
+const addNotification = (userId, actorId, type, logId, commentId, emoji, at) => {
+  if (userId === actorId) return;
+  db.prepare(
+    `INSERT INTO notifications (user_id, actor_id, type, log_id, comment_id, emoji, read_at, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+  ).run(userId, actorId, type, logId, commentId, emoji, new Date(at).getTime() > FRESH_AFTER ? null : at, at);
+};
+
 for (const logId of recentLogs) {
   const log = db.prepare('SELECT * FROM logs WHERE id = ?').get(logId);
   const reactors = allUserIds.filter((id) => id !== log.user_id && Math.random() < 0.45);
   for (const uid of reactors) {
+    const emoji = rnd(REACTIONS);
     db.prepare('INSERT OR IGNORE INTO reactions (log_id, user_id, emoji) VALUES (?, ?, ?)')
-      .run(logId, uid, rnd(REACTIONS));
+      .run(logId, uid, emoji);
+    // Reaktionen tragen keinen eigenen Zeitstempel – kurz nach dem Eintrag ist plausibel.
+    const at = new Date(new Date(log.created_at).getTime() + 1800000 + Math.random() * 7200000).toISOString();
+    addNotification(log.user_id, uid, 'reaction', logId, null, emoji, at);
   }
 
   if (Math.random() < 0.4) {
     const commenters = allUserIds.filter((id) => id !== log.user_id && Math.random() < 0.35).slice(0, 3);
+    const seenInThread = [];
     for (const uid of commenters) {
+      const at = new Date(new Date(log.created_at).getTime() + 3600000).toISOString();
       const info = db
         .prepare('INSERT INTO comments (log_id, user_id, text, created_at) VALUES (?, ?, ?, ?)')
-        .run(logId, uid, rnd(COMMENTS), new Date(new Date(log.created_at).getTime() + 3600000).toISOString());
+        .run(logId, uid, rnd(COMMENTS), at);
       const cid = Number(info.lastInsertRowid);
+
+      addNotification(log.user_id, uid, 'comment', logId, cid, null, at);
+      // Mitschwimmer: wer vorher schon im Thread war, bekommt Bescheid.
+      for (const earlier of seenInThread) addNotification(earlier, uid, 'thread', logId, cid, null, at);
+      seenInThread.push(uid);
+
       for (const voter of allUserIds) {
         if (voter !== uid && Math.random() < 0.3)
           db.prepare('INSERT OR IGNORE INTO comment_votes (comment_id, user_id) VALUES (?, ?)').run(cid, voter);
@@ -182,6 +206,7 @@ for (const s of SUGGESTIONS) {
 for (const uid of allUserIds) checkBadges(db, uid, { points: 60, hour: 12 });
 
 const stats = db.prepare('SELECT COUNT(*) n FROM logs').get();
-console.log(`✅ Fertig: ${PEOPLE.length} Nutzer, ${Object.keys(WGS).length} WGs, ${stats.n} Putzaktionen.`);
+const post = db.prepare('SELECT COUNT(*) n FROM notifications').get();
+console.log(`✅ Fertig: ${PEOPLE.length} Nutzer, ${Object.keys(WGS).length} WGs, ${stats.n} Putzaktionen, ${post.n} Riffpost-Einträge.`);
 console.log(`   Login z.B.:  nala / ${PASSWORD}`);
 console.log(`   WG-Codes:    RIFF23, LAGUNE`);

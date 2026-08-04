@@ -61,14 +61,35 @@ export function verifyToken(token) {
   }
 }
 
+const bearer = (req) => {
+  const header = req.get('authorization') || '';
+  return header.startsWith('Bearer ') ? header.slice(7) : null;
+};
+
+const userForToken = (token) => {
+  const payload = token && verifyToken(token);
+  return payload ? db.prepare('SELECT * FROM users WHERE id = ?').get(payload.uid) : null;
+};
+
 /** Express-Middleware: hängt req.user an (oder 401). */
 export function requireAuth(req, res, next) {
-  const header = req.get('authorization') || '';
-  const token = header.startsWith('Bearer ') ? header.slice(7) : null;
-  const payload = token && verifyToken(token);
-  if (!payload) return res.status(401).json({ error: 'Nicht eingeloggt.' });
-  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(payload.uid);
+  const token = bearer(req);
+  if (!token || !verifyToken(token)) return res.status(401).json({ error: 'Nicht eingeloggt.' });
+  const user = userForToken(token);
   if (!user) return res.status(401).json({ error: 'Nutzer existiert nicht mehr.' });
+  req.user = user;
+  next();
+}
+
+/**
+ * Wie requireAuth, nimmt den Token aber auch aus ?token= entgegen.
+ * Nur für den SSE-Strom: EventSource kann keine eigenen Header senden.
+ * Absichtlich nicht global – Tokens in URLs landen sonst in jedem Logfile.
+ */
+export function requireAuthQuery(req, res, next) {
+  const token = bearer(req) || String(req.query.token || '') || null;
+  const user = userForToken(token);
+  if (!user) return res.status(401).json({ error: 'Nicht eingeloggt.' });
   req.user = user;
   next();
 }

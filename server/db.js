@@ -120,6 +120,22 @@ CREATE TABLE IF NOT EXISTS badges (
   created_at TEXT NOT NULL,
   UNIQUE(user_id, code)
 );
+
+-- Riffpost: wer bekommt was mit? Alles hängt per CASCADE an seinem Auslöser,
+-- damit gelöschte Logs/Kommentare keine Geister-Benachrichtigungen hinterlassen.
+CREATE TABLE IF NOT EXISTS notifications (
+  id         INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  actor_id   INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  type       TEXT NOT NULL,
+  log_id     INTEGER REFERENCES logs(id) ON DELETE CASCADE,
+  comment_id INTEGER REFERENCES comments(id) ON DELETE CASCADE,
+  emoji      TEXT,
+  read_at    TEXT,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_notif_user   ON notifications(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_notif_unread ON notifications(user_id, read_at);
 `);
 
 // ---- Migrationen für bestehende Datenbanken -------------------------------

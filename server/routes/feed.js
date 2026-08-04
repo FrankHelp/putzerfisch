@@ -3,6 +3,7 @@ import { db } from '../db.js';
 import { requireAuth, optionalAuth } from '../auth.js';
 import { rankFor, checkBadges } from '../game.js';
 import { savePhoto, deletePhoto } from '../storage.js';
+import { notifyReaction, unnotifyReaction, notifyComment } from '../notify.js';
 
 export const router = Router();
 
@@ -105,9 +106,13 @@ router.post('/:id/react', requireAuth, (req, res) => {
   const existing = db
     .prepare('SELECT id FROM reactions WHERE log_id = ? AND user_id = ? AND emoji = ?')
     .get(log.id, req.user.id, emoji);
-  if (existing) db.prepare('DELETE FROM reactions WHERE id = ?').run(existing.id);
-  else
+  if (existing) {
+    db.prepare('DELETE FROM reactions WHERE id = ?').run(existing.id);
+    unnotifyReaction(log.id, req.user.id);
+  } else {
     db.prepare('INSERT INTO reactions (log_id, user_id, emoji) VALUES (?, ?, ?)').run(log.id, req.user.id, emoji);
+    notifyReaction(log.id, req.user.id, emoji);
+  }
 
   const reactions = db
     .prepare('SELECT emoji, COUNT(*) n FROM reactions WHERE log_id = ? GROUP BY emoji ORDER BY n DESC')
@@ -174,6 +179,7 @@ router.post('/:id/comments', requireAuth, (req, res) => {
   const info = db
     .prepare('INSERT INTO comments (log_id, user_id, text, photo, created_at) VALUES (?, ?, ?, ?, ?)')
     .run(log.id, req.user.id, text, photo, new Date().toISOString());
+  notifyComment(log.id, Number(info.lastInsertRowid), req.user.id);
   const row = db
     .prepare(
       `SELECT c.*, u.display_name, u.fish, u.color, u.xp
