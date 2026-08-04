@@ -1,0 +1,19 @@
+node_modules/
+.venv/
+.git/
+.gitignore
+.dockerignore
+*.md
+
+# Laufzeit-Daten (DB, Uploads) – liegen auf dem Host unter ./data
+server/putzapp.db
+server/putzapp.db-*
+server/uploads/
+data/
+
+# Build-Artefakte werden im Image erzeugt, nicht mitkopiert
+client/dist/
+
+# Lokales Setup / Secrets
+.env
+.DS_Store

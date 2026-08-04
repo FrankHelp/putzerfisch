@@ -1,0 +1,33 @@
+# Putzerfisch – Deploy per SSH auf den Server
+#
+# Läuft bei jedem Push auf main (und manuell per "Run workflow").
+# Erwartet Secrets im Repo (Settings -> Secrets and variables -> Actions):
+#   SERVER_HOST      IP oder Hostname des Servers
+#   SERVER_USER      SSH-Benutzer (z. B. deploy)
+#   SERVER_SSH_KEY   Privater SSH-Key (PEM/OpenSSH-Format) als Secret
+# Optional: SERVER_PORT (Standard 22)
+#
+# Anleitung für Key-Erzeugung und Server-Einrichtung: SETUP.md
+
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Per SSH deployen
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          # Nur setzen, wenn SSH nicht auf Port 22 läuft (Secret SERVER_PORT)
+          # port: ${{ secrets.SERVER_PORT }}
+          script: |
+            cd /opt/putzerfisch
+            ./deploy.sh

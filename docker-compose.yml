@@ -1,0 +1,32 @@
+# Putzerfisch – Produktions-Setup (auf dem Server)
+# App läuft in Docker, nginx übernimmt HTTPS auf dem Host (siehe SETUP.md).
+#
+#   docker compose up -d --build
+#
+# Wichtig: .env muss PUTZAPP_SECRET enthalten (siehe .env.example), sonst
+# werden bei jedem Deploy neue Tokens ausgestellt.
+
+services:
+  app:
+    build: .
+    image: putzerfisch-app:latest
+    restart: unless-stopped
+    init: true
+    env_file:
+      - .env
+    environment:
+      - PORT=4321
+      # DB + Uploads persistent auf dem Host (Backup = ./data kopieren)
+      - PUTZAPP_DB=/app/data/putzapp.db
+      - PUTZAPP_UPLOADS=/app/data/uploads
+    ports:
+      # Nur lokal erreichbar – nginx (Host) reicht nach außen
+      - "127.0.0.1:4321:4321"
+    volumes:
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4321/api/health').then(r => { if (!r.ok) process.exit(1) }).catch(() => process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
