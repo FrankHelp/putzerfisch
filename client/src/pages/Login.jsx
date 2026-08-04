@@ -131,10 +131,6 @@ export default function Login() {
           {busy ? '…' : mode === 'login' ? 'Abtauchen 🌊' : 'Riff betreten 🫧'}
         </button>
       </form>
-
-      <p className="faint center mt" style={{ fontSize: 12.5, fontWeight: 600 }}>
-        Demo-Account: <b>nala</b> / <b>putzen123</b>
-      </p>
     </div>
   );
 }
