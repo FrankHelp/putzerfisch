@@ -4,6 +4,7 @@ import { useApp } from '../state.jsx';
 import { navigate } from '../router.jsx';
 import { Avatar } from './ui.jsx';
 import { compressToJpegDataUrl } from '../photo.js';
+import { haptic } from '../haptics.js';
 
 const ALL_REACTIONS = ['🫧', '🔥', '👏', '🐠', '🤩', '🧽', '💪', '😱'];
 
@@ -18,6 +19,7 @@ export default function FeedCard({ item, index = 0, onDeleted, openComments = fa
 
   const react = async (emoji) => {
     if (!user) return toast('Log dich ein, um zu reagieren.', 'err');
+    haptic('success'); // sofortiges Belohnungs-Feedback (optimistisch)
     setPopping(emoji);
     setTimeout(() => setPopping(null), 420);
 
@@ -47,6 +49,7 @@ export default function FeedCard({ item, index = 0, onDeleted, openComments = fa
     if (!confirm('Diesen Eintrag wirklich zurücknehmen? Die Punkte werden abgezogen.')) return;
     try {
       await api.del(`/activities/log/${item.id}`);
+      haptic('danger'); // Eintrag weg – Punkte werden abgezogen
       toast('Eintrag zurückgenommen.');
       onDeleted?.(item.id);
     } catch (e) {
@@ -207,6 +210,7 @@ function Comments({ logId, onCountChange }) {
     setSending(true);
     try {
       const d = await api.post(`/feed/${logId}/comments`, { text: value, photo: photo || undefined });
+      haptic('success'); // Kommentar abgeschickt
       setList((l) => [...(l ?? []), d.comment]);
       onCountChange?.((c) => c + 1);
       setText('');
@@ -222,6 +226,7 @@ function Comments({ logId, onCountChange }) {
 
   const vote = async (c) => {
     if (!user) return toast('Log dich ein, um abzustimmen.', 'err');
+    haptic('success'); // Belohnung für soziale Interaktion (optimistisch)
     // Optimistisch, danach mit dem Server abgleichen.
     setList((l) =>
       l.map((x) => (x.id === c.id ? { ...x, voted: !x.voted, votes: x.votes + (x.voted ? -1 : 1) } : x))

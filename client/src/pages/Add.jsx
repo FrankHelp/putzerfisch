@@ -5,6 +5,7 @@ import { navigate } from '../router.jsx';
 import { Sheet, Empty, Skeletons, Confetti, CountUp } from '../components/ui.jsx';
 import { compressToJpegDataUrl } from '../photo.js';
 import { usePlan, setPlanMode, togglePlanItem } from '../plan.js';
+import { haptic } from '../haptics.js';
 
 export default function Add() {
   const { user, setUser, toast } = useApp();
@@ -81,6 +82,7 @@ export default function Add() {
       setUser(d.user);
       setSelected(null);
       setPhoto(null);
+      haptic('success'); // Belohnungs-Tick, sobald die Punkte sicher sind
       setCelebration({ ...d, activity: selected });
     } catch (e) {
       toast(e.message, 'err');
@@ -93,6 +95,7 @@ export default function Add() {
     try {
       const res = await api.del(`/activities/log/${celebration.logId}`);
       setUser(res.user);
+      haptic('danger'); // Eintrag wird gelöscht, Punkte werden abgezogen
       toast('Eintrag zurückgenommen ↩');
       setCelebration(null);
       navigate('/feed');

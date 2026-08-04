@@ -3,6 +3,7 @@ import { useApp } from './state.jsx';
 import { useRoute, navigate } from './router.jsx';
 import { Ocean, Toasts, Sheet, Avatar } from './components/ui.jsx';
 import { initSoundSystem, startMusic, getSoundEnabled, setSoundEnabled } from './sound.js';
+import { initHapticSystem } from './haptics.js';
 import { isStandalone, pushState, enablePush, disablePush, installAvailable, installApp } from './push.js';
 import Inbox from './components/Inbox.jsx';
 import Login from './pages/Login.jsx';
@@ -30,6 +31,7 @@ export default function App() {
 
   useEffect(() => {
     initSoundSystem();
+    initHapticSystem();
     startMusic();
   }, []);
 
@@ -74,7 +76,12 @@ export default function App() {
       </div>
       <TabBar view={view} />
       <Toasts />
-      <SettingsSheet open={settingsOpen} onClose={() => setSettingsOpen(false)} soundOn={soundOn} onToggleSound={onToggleSound} />
+      <SettingsSheet
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        soundOn={soundOn}
+        onToggleSound={onToggleSound}
+      />
     </>
   );
 }

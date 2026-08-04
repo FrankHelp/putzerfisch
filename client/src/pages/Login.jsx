@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useApp } from '../state.jsx';
+import { haptic } from '../haptics.js';
 
 const FISH = ['🐠', '🐟', '🐡', '🦈', '🐙', '🦑', '🦐', '🦀', '🐢', '🐬', '🐳', '🪼', '🦭', '🐚'];
 const COLORS = ['#2ee6d6', '#5ad1ff', '#a78bfa', '#f472b6', '#ffb45c', '#4ade80', '#fcd34d', '#fb7185'];
@@ -20,9 +21,11 @@ export default function Login() {
     try {
       if (mode === 'login') {
         const u = await login(username.trim(), password);
+        haptic('success');
         toast(`Willkommen zurück, ${u.displayName}! ${u.fish}`);
       } else {
         const u = await register({ username: username.trim(), displayName: displayName.trim(), password, fish, color });
+        haptic('success');
         toast(`Ahoi ${u.displayName}! Dein Riff wartet. 🫧`);
       }
     } catch (err) {

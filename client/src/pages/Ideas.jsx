@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api, timeAgo } from '../api.js';
 import { useApp } from '../state.jsx';
 import { Sheet, Avatar, Empty, Skeletons, Confetti } from '../components/ui.jsx';
+import { haptic } from '../haptics.js';
 
 const ICONS = ['🧽', '🧼', '🪣', '🧹', '🚿', '🪟', '🧴', '🗑️', '👕', '🍽️', '🛏️', '🪴', '🕸️', '💡', '🚪', '❄️', '🔥', '✨'];
 
@@ -30,6 +31,7 @@ export default function Ideas() {
     if (!user) return toast('Log dich ein, um abzustimmen.', 'err');
     try {
       const d = await api.post(`/suggestions/${s.id}/vote`);
+      haptic('success'); // Belohnung fürs Abstimmen
       if (d.promoted) {
         setParty(true);
         setTimeout(() => setParty(false), 3400);

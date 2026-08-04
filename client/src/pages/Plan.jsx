@@ -4,6 +4,7 @@ import { useApp } from '../state.jsx';
 import { usePlan, markPlanDone, clearPlan } from '../plan.js';
 import { navigate } from '../router.jsx';
 import { Empty, Confetti } from '../components/ui.jsx';
+import { haptic } from '../haptics.js';
 
 /* ---------- Putzplan: die vorbereitete Checkliste ----------
  * Jede Aktivität wird per Checkbox abgeschlossen – das logged sie
@@ -47,6 +48,7 @@ export default function Plan() {
       const d = await api.post('/activities/log', { activityId: a.id });
       setUser(d.user);
       markPlanDone(a.id, { points: d.points });
+      haptic('success'); // Aufgabe abgehakt = Punkte kassiert
       toast(`${a.icon} ${a.name} erledigt — +${d.points} Punkte 🫧`);
       if (d.leveledUp) toast(`🏆 Neuer Rang: ${d.leveledUp.name}`);
       (d.newBadges ?? []).forEach((b) => toast(`${b.icon} Badge: ${b.name}`));

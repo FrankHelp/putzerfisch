@@ -3,6 +3,7 @@ import { api, num } from '../api.js';
 import { useApp } from '../state.jsx';
 import { navigate } from '../router.jsx';
 import { Avatar, Sheet, Skeletons } from '../components/ui.jsx';
+import { haptic } from '../haptics.js';
 
 const EMBLEMS = ['🪸', '🐚', '🌊', '⚓', '🏝️', '🦑', '🐳', '🧜', '🗿', '🫧', '🦞', '🐢'];
 
@@ -81,6 +82,7 @@ export default function WG() {
             setData(null); // kein veraltetes { wg: null } mehr rendern
             setUser(u);
             setMode(null);
+            haptic('success');
             toast(`Willkommen bei ${u.wg.name}! ${u.wg.emblem}`);
           }}
         />
@@ -91,6 +93,7 @@ export default function WG() {
             setData(null); // kein veraltetes { wg: null } mehr rendern
             setUser(u);
             setMode(null);
+            haptic('success');
             toast(`${u.wg.name} gegründet! Teile den Code. 🎉`);
           }}
         />
