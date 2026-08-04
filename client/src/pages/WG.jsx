@@ -78,6 +78,7 @@ export default function WG() {
           open={mode === 'join'}
           onClose={() => setMode(null)}
           onDone={(u) => {
+            setData(null); // kein veraltetes { wg: null } mehr rendern
             setUser(u);
             setMode(null);
             toast(`Willkommen bei ${u.wg.name}! ${u.wg.emblem}`);
@@ -87,6 +88,7 @@ export default function WG() {
           open={mode === 'create'}
           onClose={() => setMode(null)}
           onDone={(u) => {
+            setData(null); // kein veraltetes { wg: null } mehr rendern
             setUser(u);
             setMode(null);
             toast(`${u.wg.name} gegründet! Teile den Code. 🎉`);
@@ -96,7 +98,9 @@ export default function WG() {
     );
 
   // --- WG vorhanden ---
-  if (!data) return <div className="screen"><Skeletons n={3} height={120} /></div>;
+  // data kann { wg: null } sein (Antwort von /wg/mine ohne WG) – dann erst
+  // nach dem Nachladen rendern, sonst crasht members.reduce unten.
+  if (!data?.wg) return <div className="screen"><Skeletons n={3} height={120} /></div>;
 
   const { wg, members, reef } = data;
   const totalXp = members.reduce((s, m) => s + m.xp, 0);
