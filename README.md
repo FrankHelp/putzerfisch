@@ -177,7 +177,7 @@ Verschieben lässt sie sich per `PUTZAPP_DB=/pfad/zur.db`.
 | `PUTZAPP_SECRET` | generiert | Signier-Secret für Tokens |
 | `PUTZAPP_DB` | `server/putzapp.db` | Pfad zur Datenbank |
 | `PUTZAPP_UPLOADS` | `server/uploads` | Ablageort für Fotos |
-| `PUTZAPP_APPROVE_VOTES` | `5` | Stimmen, bis ein Vorschlag in den Katalog wandert |
+| `PUTZAPP_APPROVE_VOTES` | `10` | Stimmen, bis ein Vorschlag in den Katalog wandert |
 
 ---
 

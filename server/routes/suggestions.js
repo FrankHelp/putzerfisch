@@ -7,7 +7,7 @@ import { awardBadge, rankFor } from '../game.js';
 export const router = Router();
 
 /** So viele Stimmen braucht ein Vorschlag, um in den Katalog zu wandern. */
-export const APPROVE_THRESHOLD = Number(process.env.PUTZAPP_APPROVE_VOTES || 5);
+export const APPROVE_THRESHOLD = Number(process.env.PUTZAPP_APPROVE_VOTES || 10);
 
 function shape(s, viewerId) {
   const votes = Number(
