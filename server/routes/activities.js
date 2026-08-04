@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { db } from '../db.js';
 import { requireAuth } from '../auth.js';
 import { CATEGORIES } from '../catalog.js';
-import { computePoints, updateStreak, checkBadges, rankFor, dayKey } from '../game.js';
+import { computePoints, updateStreak, syncBadges, rankFor, dayKey } from '../game.js';
 import { savePhoto, deletePhoto } from '../storage.js';
 import { publicUser } from './auth.js';
 
@@ -96,7 +96,7 @@ router.post('/log', requireAuth, (req, res) => {
   db.prepare('UPDATE users SET xp = xp + ? WHERE id = ?').run(points, req.user.id);
   const updated = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
   const after = rankFor(updated.xp);
-  const newBadges = checkBadges(db, req.user.id, { hour: new Date().getHours(), points });
+  const newBadges = syncBadges(db, req.user.id);
 
   res.status(201).json({
     logId: Number(info.lastInsertRowid),
@@ -119,6 +119,7 @@ router.delete('/log/:id', requireAuth, (req, res) => {
 
   db.prepare('DELETE FROM logs WHERE id = ?').run(log.id);
   db.prepare('UPDATE users SET xp = MAX(0, xp - ?) WHERE id = ?').run(log.points, req.user.id);
+  syncBadges(db, req.user.id); // Badges entziehen, deren Bedingung nicht mehr gilt.
   deletePhoto(log.photo); // Aufräumen erst nach erfolgreichem Löschen.
   res.json({ user: publicUser(db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id)) });
 });

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { db } from '../db.js';
 import { requireAuth, optionalAuth } from '../auth.js';
-import { rankFor, checkBadges } from '../game.js';
+import { rankFor, syncBadges } from '../game.js';
 import { savePhoto, deletePhoto } from '../storage.js';
 import { notifyReaction, unnotifyReaction, notifyComment } from '../notify.js';
 
@@ -186,7 +186,7 @@ router.post('/:id/comments', requireAuth, (req, res) => {
        FROM comments c JOIN users u ON u.id = c.user_id WHERE c.id = ?`
     )
     .get(Number(info.lastInsertRowid));
-  const newBadges = checkBadges(db, req.user.id, {});
+  const newBadges = syncBadges(db, req.user.id);
   res.status(201).json({ comment: shapeComment(row, req.user.id), newBadges });
 });
 
@@ -214,6 +214,7 @@ commentRouter.delete('/:id', requireAuth, (req, res) => {
     return res.status(404).json({ error: 'Kommentar nicht gefunden.' });
   db.prepare('DELETE FROM comments WHERE id = ?').run(comment.id);
   deletePhoto(comment.photo);
+  syncBadges(db, req.user.id); // z. B. social_fish, falls die Schwelle unterschritten wird.
   res.json({ ok: true });
 });
 

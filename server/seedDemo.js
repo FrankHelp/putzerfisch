@@ -5,7 +5,7 @@
  */
 import { db } from './db.js';
 import { hashPassword } from './auth.js';
-import { checkBadges, computePoints } from './game.js';
+import { syncBadges, computePoints } from './game.js';
 import { REACTIONS } from './routes/feed.js';
 
 const PASSWORD = 'putzen123';
@@ -203,7 +203,7 @@ for (const s of SUGGESTIONS) {
 }
 
 // ---- Badges nachrechnen ----
-for (const uid of allUserIds) checkBadges(db, uid, { points: 60, hour: 12 });
+for (const uid of allUserIds) syncBadges(db, uid);
 
 const stats = db.prepare('SELECT COUNT(*) n FROM logs').get();
 const post = db.prepare('SELECT COUNT(*) n FROM notifications').get();

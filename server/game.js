@@ -56,37 +56,65 @@ export function awardBadge(db, userId, code) {
   return Number(res.changes) > 0 ? { code, ...BADGES[code] } : null;
 }
 
-export function checkBadges(db, userId, ctx = {}) {
-  const earned = [];
-  const push = (code) => {
-    const b = awardBadge(db, userId, code);
-    if (b) earned.push(b);
-  };
+/**
+ * Gleicht die Badges eines Users mit dem aktuellen Stand ab: vergibt neu
+ * verdiente Badges und entzieht welche, deren Bedingung nicht mehr erfüllt
+ * ist (z. B. nach dem Zurücknehmen einer Aktivität). Zustandsbasiert aus der
+ * DB statt kontextbasiert – so bleiben Badges und Wirklichkeit synchron.
+ * Gibt die neu vergebenen Badges zurück.
+ */
+export function syncBadges(db, userId) {
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
-  const count = (sql, ...p) => Number(db.prepare(sql).get(...p)?.n ?? 0);
+  if (!user) return [];
 
-  const totalLogs = count('SELECT COUNT(*) n FROM logs WHERE user_id = ?', userId);
-  if (totalLogs >= 1) push('first_splash');
-  if (totalLogs >= 100) push('century');
+  const logs = db.prepare('SELECT created_at, category, points FROM logs WHERE user_id = ?').all(userId);
+  const comments = Number(db.prepare('SELECT COUNT(*) n FROM comments WHERE user_id = ?').get(userId)?.n ?? 0);
+  const approvedIdea = db.prepare("SELECT 1 x FROM suggestions WHERE user_id = ? AND status = 'approved'").get(userId);
 
-  if (user.streak >= 3) push('streak_3');
-  if (user.streak >= 7) push('streak_7');
-  if (user.streak >= 30) push('streak_30');
-  if (user.xp >= 5000) push('reef_saver');
+  const total = logs.length;
+  const categories = new Set(logs.map((l) => l.category)).size;
+  const byCat = (c) => logs.filter((l) => l.category === c).length;
+  const night = logs.some((l) => {
+    const h = berlinHourOf(new Date(l.created_at));
+    return h >= 23 || h < 2;
+  });
+  const early = logs.some((l) => {
+    const h = berlinHourOf(new Date(l.created_at));
+    return h >= 4 && h < 7;
+  });
+  const big = logs.some((l) => l.points >= 50);
 
-  if (ctx.hour !== undefined) {
-    if (ctx.hour >= 23 || ctx.hour < 2) push('night_owl');
-    if (ctx.hour >= 4 && ctx.hour < 7) push('early_fish');
+  const earned = new Set();
+  if (total >= 1) earned.add('first_splash');
+  if (total >= 100) earned.add('century');
+  if (user.streak >= 3) earned.add('streak_3');
+  if (user.streak >= 7) earned.add('streak_7');
+  if (user.streak >= 30) earned.add('streak_30');
+  if (user.xp >= 5000) earned.add('reef_saver');
+  if (night) earned.add('night_owl');
+  if (early) earned.add('early_fish');
+  if (big) earned.add('big_one');
+  if (byCat('kueche') >= 10) earned.add('kitchen_boss');
+  if (byCat('bad') >= 10) earned.add('tile_king');
+  if (byCat('muell') >= 20) earned.add('trash_tycoon');
+  if (categories >= 9) earned.add('all_rounder');
+  if (comments >= 25) earned.add('social_fish');
+  if (approvedIdea) earned.add('idea_bubbler');
+
+  const newly = [];
+  for (const code of earned) {
+    const b = awardBadge(db, userId, code);
+    if (b) newly.push(b);
   }
-  if (ctx.points >= 50) push('big_one');
 
-  if (count("SELECT COUNT(*) n FROM logs WHERE user_id = ? AND category = 'kueche'", userId) >= 10) push('kitchen_boss');
-  if (count("SELECT COUNT(*) n FROM logs WHERE user_id = ? AND category = 'bad'", userId) >= 10) push('tile_king');
-  if (count("SELECT COUNT(*) n FROM logs WHERE user_id = ? AND category = 'muell'", userId) >= 20) push('trash_tycoon');
-  if (count('SELECT COUNT(DISTINCT category) n FROM logs WHERE user_id = ?', userId) >= 9) push('all_rounder');
-  if (count('SELECT COUNT(*) n FROM comments WHERE user_id = ?', userId) >= 25) push('social_fish');
+  // Entzug: nur bekannte Badges, deren Bedingung nicht mehr erfüllt ist.
+  for (const row of db.prepare('SELECT code FROM badges WHERE user_id = ?').all(userId)) {
+    if (BADGES[row.code] && !earned.has(row.code)) {
+      db.prepare('DELETE FROM badges WHERE user_id = ? AND code = ?').run(userId, row.code);
+    }
+  }
 
-  return earned;
+  return newly;
 }
 
 // ---- Streak & Boni -----------------------------------------------------
@@ -123,6 +151,12 @@ function berlinMidnightUTC(y, m, d) {
     if (dayKey(new Date(ts)) === want) return ts;
   }
   return Date.UTC(y, m - 1, d - 1, 23, 0, 0, 0);
+}
+
+/** Berliner Stunde (0–23) eines Zeitpunkts – für Zeitfenster-Badges. */
+export function berlinHourOf(d = new Date()) {
+  const p = new Intl.DateTimeFormat('en-GB', { timeZone: BERLIN_TZ, hour: '2-digit', hour12: false }).formatToParts(d);
+  return Number(p.find((x) => x.type === 'hour')?.value ?? 0) % 24;
 }
 
 export function updateStreak(db, user) {

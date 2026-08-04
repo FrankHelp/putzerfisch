@@ -9,7 +9,7 @@ import { haptic } from '../haptics.js';
 const ALL_REACTIONS = ['🫧', '🔥', '👏', '🐠', '🤩', '🧽', '💪', '😱'];
 
 export default function FeedCard({ item, index = 0, onDeleted, openComments = false }) {
-  const { user, toast } = useApp();
+  const { user, setUser, toast } = useApp();
   const [reactions, setReactions] = useState(item.reactions);
   const [mine, setMine] = useState(item.myReactions);
   const [picker, setPicker] = useState(false);
@@ -48,7 +48,8 @@ export default function FeedCard({ item, index = 0, onDeleted, openComments = fa
   const remove = async () => {
     if (!confirm('Diesen Eintrag wirklich zurücknehmen? Die Punkte werden abgezogen.')) return;
     try {
-      await api.del(`/activities/log/${item.id}`);
+      const d = await api.del(`/activities/log/${item.id}`);
+      if (d.user) setUser(d.user); // Punkte/Rang sofort überall aktualisieren (HeroCard, TopBar, …)
       haptic('danger'); // Eintrag weg – Punkte werden abgezogen
       toast('Eintrag zurückgenommen.');
       onDeleted?.(item.id);

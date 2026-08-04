@@ -13,3 +13,6 @@ client/dist/
 # Deployment
 .env
 data/
+
+# macOS Finder-Metadaten
+.DS_Store
