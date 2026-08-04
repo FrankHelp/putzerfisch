@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS activities (
   icon       TEXT NOT NULL DEFAULT '🧽',
   points     INTEGER NOT NULL,
   minutes    INTEGER NOT NULL DEFAULT 10,
+  prio       INTEGER NOT NULL DEFAULT 0,
   keywords   TEXT NOT NULL DEFAULT '',
   created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
   created_at TEXT NOT NULL
@@ -156,18 +157,20 @@ function ensureColumn(table, column, ddl) {
 }
 ensureColumn('logs', 'photo', 'photo TEXT');
 ensureColumn('comments', 'photo', 'photo TEXT');
+ensureColumn('activities', 'prio', 'prio INTEGER NOT NULL DEFAULT 0');
 
 // ---- Seed des Aktivitäten-Katalogs (idempotent) --------------------------
 const seedStmt = db.prepare(`
-  INSERT INTO activities (slug, name, category, icon, points, minutes, keywords, created_at)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  INSERT INTO activities (slug, name, category, icon, points, minutes, prio, keywords, created_at)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   ON CONFLICT(slug) DO UPDATE SET
     name = excluded.name, category = excluded.category, icon = excluded.icon,
-    points = excluded.points, minutes = excluded.minutes, keywords = excluded.keywords
+    points = excluded.points, minutes = excluded.minutes, prio = excluded.prio,
+    keywords = excluded.keywords
 `);
 const now = new Date().toISOString();
 for (const a of CATALOG) {
-  seedStmt.run(a.slug, a.name, a.category, a.icon, a.points, a.minutes, a.keywords.join(' '), now);
+  seedStmt.run(a.slug, a.name, a.category, a.icon, a.points, a.minutes, a.prio, a.keywords.join(' '), now);
 }
 
 export default db;

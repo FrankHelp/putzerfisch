@@ -181,12 +181,12 @@ for (const logId of recentLogs) {
 
 // ---- Vorschläge ----
 const SUGGESTIONS = [
-  { name: 'Duschvorhang waschen', category: 'bad', icon: '🛁', points: 22, minutes: 15, description: 'Der Vorhang wird nie gewaschen und irgendwann eigenständig.', votes: 4, by: 'mira' },
-  { name: 'Toaster ausklopfen', category: 'kueche', icon: '🍞', points: 10, minutes: 5, description: 'Krümelfach leeren, bevor es brennt.', votes: 3, by: 'jonas' },
-  { name: 'Spinnweben-Patrouille', category: 'wohnen', icon: '🕸️', points: 18, minutes: 12, description: 'Alle Zimmerecken einmal abgehen.', votes: 2, by: 'kai' },
-  { name: 'Kühlschrank-Archäologie', category: 'kueche', icon: '🦴', points: 30, minutes: 25, description: 'Alles entsorgen, was älter ist als die WG selbst.', votes: 4, by: 'lea' },
-  { name: 'Fußmatte ausschütteln', category: 'aussen', icon: '🚪', points: 8, minutes: 4, description: 'Kleine Geste, große Wirkung.', votes: 1, by: 'ben' },
-  { name: 'Lichtschalter entfetten', category: 'extra', icon: '💡', points: 12, minutes: 8, description: 'Man sieht es nicht, man fühlt es.', votes: 2, by: 'yara' },
+  { name: 'Duschvorhang waschen', category: 'riffspalte', icon: '🛁', points: 22, minutes: 15, description: 'Der Vorhang wird nie gewaschen und irgendwann eigenständig.', votes: 4, by: 'mira' },
+  { name: 'Toaster ausklopfen', category: 'kombuese', icon: '🍞', points: 10, minutes: 5, description: 'Krümelfach leeren, bevor es brennt.', votes: 3, by: 'jonas' },
+  { name: 'Spinnweben-Patrouille', category: 'wohnriff', icon: '🕸️', points: 18, minutes: 12, description: 'Alle Zimmerecken einmal abgehen.', votes: 2, by: 'kai' },
+  { name: 'Kühlschrank-Archäologie', category: 'kombuese', icon: '🦴', points: 30, minutes: 25, description: 'Alles entsorgen, was älter ist als die WG selbst.', votes: 4, by: 'lea' },
+  { name: 'Fußmatte ausschütteln', category: 'aussenriff', icon: '🚪', points: 8, minutes: 4, description: 'Kleine Geste, große Wirkung.', votes: 1, by: 'ben' },
+  { name: 'Lichtschalter entfetten', category: 'perlen', icon: '💡', points: 12, minutes: 8, description: 'Man sieht es nicht, man fühlt es.', votes: 2, by: 'yara' },
 ];
 
 for (const s of SUGGESTIONS) {

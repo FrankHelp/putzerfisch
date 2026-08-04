@@ -15,7 +15,8 @@ router.get('/', (req, res) => {
   const q = String(req.query.q ?? '').trim().toLowerCase();
   const category = String(req.query.category ?? '').trim();
 
-  let rows = db.prepare('SELECT * FROM activities ORDER BY category, points DESC').all();
+  // Wahrscheinlichste Todos zuerst: prio (Einsätze pro Jahr) absteigend, bei Gleichstand mehr Punkte.
+  let rows = db.prepare('SELECT * FROM activities ORDER BY category, prio DESC, points DESC').all();
   if (category) rows = rows.filter((r) => r.category === category);
   if (q) {
     const terms = q.split(/\s+/).filter(Boolean);

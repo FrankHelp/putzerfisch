@@ -41,7 +41,7 @@ export const BADGES = {
   kitchen_boss:   { icon: '🍳', name: 'Kombüsen-Chef',    desc: '10× in der Küche geputzt.' },
   tile_king:      { icon: '👑', name: 'Kachelkönig',      desc: '10× das Bad gemacht.' },
   trash_tycoon:   { icon: '♻️', name: 'Strandgut-Magnat', desc: '20× Müll entsorgt.' },
-  all_rounder:    { icon: '🧭', name: 'Allrounder',       desc: 'In allen 9 Kategorien aktiv.' },
+  all_rounder:    { icon: '🧭', name: 'Allrounder',       desc: 'In allen 8 Kategorien aktiv.' },
   big_one:        { icon: '🐋', name: 'Wal-Aktion',       desc: 'Eine Aktion mit 50+ Punkten.' },
   social_fish:    { icon: '💬', name: 'Schwarmfisch',     desc: '25 Kommentare geschrieben.' },
   idea_bubbler:   { icon: '💡', name: 'Ideensprudler',    desc: 'Ein Vorschlag wurde angenommen.' },
@@ -94,10 +94,10 @@ export function syncBadges(db, userId) {
   if (night) earned.add('night_owl');
   if (early) earned.add('early_fish');
   if (big) earned.add('big_one');
-  if (byCat('kueche') >= 10) earned.add('kitchen_boss');
-  if (byCat('bad') >= 10) earned.add('tile_king');
-  if (byCat('muell') >= 20) earned.add('trash_tycoon');
-  if (categories >= 9) earned.add('all_rounder');
+  if (byCat('kombuese') >= 10) earned.add('kitchen_boss');
+  if (byCat('riffspalte') >= 10) earned.add('tile_king');
+  if (byCat('strandgut') >= 20) earned.add('trash_tycoon');
+  if (categories >= 8) earned.add('all_rounder');
   if (comments >= 25) earned.add('social_fish');
   if (approvedIdea) earned.add('idea_bubbler');
 
