@@ -1,3 +1,5 @@
 node_modules/
 .venv/
 server/uploads/
+server/putzapp.db
+server/putzapp.db*

@@ -1,6 +1,8 @@
+import { useEffect, useState } from 'react';
 import { useApp } from './state.jsx';
 import { useRoute, navigate } from './router.jsx';
-import { Ocean, Toasts, Avatar } from './components/ui.jsx';
+import { Ocean, Toasts, Sheet, Avatar } from './components/ui.jsx';
+import { initSoundSystem, startMusic, getSoundEnabled, setSoundEnabled } from './sound.js';
 import Login from './pages/Login.jsx';
 import Feed from './pages/Feed.jsx';
 import Add from './pages/Add.jsx';
@@ -19,6 +21,19 @@ const TABS = [
 export default function App() {
   const { user, booting } = useApp();
   const { view, param } = useRoute();
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [soundOn, setSoundOn] = useState(getSoundEnabled());
+
+  useEffect(() => {
+    initSoundSystem();
+    startMusic();
+  }, []);
+
+  const onToggleSound = () => {
+    const next = !soundOn;
+    setSoundOn(next);
+    setSoundEnabled(next);
+  };
 
   if (booting)
     return (
@@ -50,11 +65,12 @@ export default function App() {
     <>
       <Ocean />
       <div className="app">
-        <TopBar user={user} />
+        <TopBar user={user} view={view} onOpenSettings={() => setSettingsOpen(true)} />
         <Screen view={view} param={param} />
       </div>
       <TabBar view={view} />
       <Toasts />
+      <SettingsSheet open={settingsOpen} onClose={() => setSettingsOpen(false)} soundOn={soundOn} onToggleSound={onToggleSound} />
     </>
   );
 }
@@ -79,7 +95,7 @@ function Screen({ view, param }) {
   }
 }
 
-function TopBar({ user }) {
+function TopBar({ user, view, onOpenSettings }) {
   const hot = user.streak > 0;
   return (
     <header className="topbar">
@@ -91,14 +107,66 @@ function TopBar({ user }) {
       <div className={`streak-chip ${hot ? '' : 'cold'}`} title="Tage in Folge geputzt">
         {hot ? '🔥' : '🧊'} {user.streak}
       </div>
-      <Avatar
-        fish={user.fish}
-        color={user.color}
-        size={36}
-        level={user.rank.level}
-        onClick={() => navigate('/me')}
-      />
+      {view === 'me' ? (
+        <button className="settings-btn" onClick={onOpenSettings} aria-label="Einstellungen" title="Einstellungen">
+          <SettingsIcon />
+        </button>
+      ) : (
+        <Avatar
+          fish={user.fish}
+          color={user.color}
+          size={36}
+          level={user.rank.level}
+          onClick={() => navigate('/me')}
+        />
+      )}
     </header>
+  );
+}
+
+/* ---------- Einstellungsrad (Feather-Icon, MIT-Lizenz, currentColor = Theme) ---------- */
+function SettingsIcon({ size = 18 }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  );
+}
+
+/* ---------- Settings-Modal (aktuell nur Sound) ---------- */
+function SettingsSheet({ open, onClose, soundOn, onToggleSound }) {
+  return (
+    <Sheet open={open} onClose={onClose} title="Einstellungen">
+      <div className="row" style={{ marginTop: 14, alignItems: 'center' }}>
+        <div className="grow">
+          <div style={{ fontWeight: 800, fontSize: 15 }}>🔊 Sound</div>
+          <div className="faint" style={{ fontSize: 12, fontWeight: 700, marginTop: 1 }}>
+            {soundOn ? 'Musik & Klick-Sounds an' : 'Musik & Klick-Sounds aus'}
+          </div>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={soundOn}
+          aria-label="Sound an/aus"
+          className={`switch ${soundOn ? 'on' : ''}`}
+          onClick={onToggleSound}
+        >
+          <span className="knob" />
+        </button>
+      </div>
+    </Sheet>
   );
 }
 
