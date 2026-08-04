@@ -1,3 +1,11 @@
 node_modules/
 .venv/
 server/uploads/
+
+# Laufzeit-Datenbank (wird beim ersten Start selbst angelegt)
+server/putzapp.db
+server/putzapp.db-shm
+server/putzapp.db-wal
+
+# Build-Artefakt (via `npm run build` erzeugt)
+client/dist/

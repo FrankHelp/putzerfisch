@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useApp } from '../state.jsx';
 
 /* ---------- Ozean-Hintergrund mit aufsteigenden Blasen ---------- */
@@ -73,14 +74,18 @@ export function Sheet({ open, onClose, title, children }) {
   }, [open, onClose]);
 
   if (!open) return null;
-  return (
+  // Direkt an <body>: Elternteile mit backdrop-filter (z. B. die Kopfzeile)
+  // wären sonst der Bezugsrahmen für position:fixed – das Sheet landete
+  // dann in der Kopfzeile statt über dem ganzen Bildschirm.
+  return createPortal(
     <div className="sheet-backdrop" onClick={onClose}>
       <div className="sheet" onClick={(e) => e.stopPropagation()}>
         <div className="grabber" />
         {title && <h3>{title}</h3>}
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

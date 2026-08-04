@@ -7,12 +7,12 @@ import { compressToJpegDataUrl } from '../photo.js';
 
 const ALL_REACTIONS = ['🫧', '🔥', '👏', '🐠', '🤩', '🧽', '💪', '😱'];
 
-export default function FeedCard({ item, index = 0, onDeleted }) {
+export default function FeedCard({ item, index = 0, onDeleted, openComments = false }) {
   const { user, toast } = useApp();
   const [reactions, setReactions] = useState(item.reactions);
   const [mine, setMine] = useState(item.myReactions);
   const [picker, setPicker] = useState(false);
-  const [showComments, setShowComments] = useState(false);
+  const [showComments, setShowComments] = useState(openComments);
   const [commentCount, setCommentCount] = useState(item.commentCount);
   const [popping, setPopping] = useState(null);
 

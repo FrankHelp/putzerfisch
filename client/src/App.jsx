@@ -1,7 +1,9 @@
 import { useApp } from './state.jsx';
 import { useRoute, navigate } from './router.jsx';
 import { Ocean, Toasts, Avatar } from './components/ui.jsx';
+import Inbox from './components/Inbox.jsx';
 import Login from './pages/Login.jsx';
+import LogDetail from './pages/LogDetail.jsx';
 import Feed from './pages/Feed.jsx';
 import Add from './pages/Add.jsx';
 import Board from './pages/Board.jsx';
@@ -73,6 +75,8 @@ function Screen({ view, param }) {
       return <Profile userId={Number(param)} />;
     case 'wg':
       return <WG />;
+    case 'log':
+      return <LogDetail logId={Number(param)} />;
     case 'feed':
     default:
       return <Feed />;
@@ -88,6 +92,7 @@ function TopBar({ user }) {
         <span>Putzerfisch</span>
       </div>
       <div className="spacer" />
+      <Inbox />
       <div className={`streak-chip ${hot ? '' : 'cold'}`} title="Tage in Folge geputzt">
         {hot ? '🔥' : '🧊'} {user.streak}
       </div>

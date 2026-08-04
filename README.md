@@ -53,6 +53,7 @@ PUTZAPP_SECRET=<langer-zufallsstring> PORT=8080 npm start
 | **Feed** | Startseite mit allen Putzaktionen – umschaltbar zwischen eigener WG und allen Riffen, Fotos als Nachweis |
 | **Reaktionen** | 8 Emojis pro Eintrag, ein Tap zum An-/Abwählen, optimistisch dargestellt |
 | **Kommentare** | Kommentieren mit optionalen Fotos, Kommentare upvoten, eigene löschen; sortiert nach Stimmen |
+| **Riffpost** | Muschel in der Kopfzeile: sammelt Reaktionen und Kommentare auf eigene Aktionen sowie Threads, in denen man selbst mitgeschrieben hat |
 | **Aktivität eintragen** | Volltextsuche **oder** Auswahl über 9 Kategorien, danach Bestätigung mit Bonus-Vorschau und optionalem Foto |
 | **Leaderboards** | WG-intern · WG-Liga (gemittelt pro Kopf) · global – je für Woche/Monat/gesamt |
 | **WGs** | Gründen mit Wappen und Motto, Beitritt per 6-stelligem Code, Riff-Sauberkeits-Anzeige |
@@ -86,6 +87,47 @@ Trüb → Algig → Sumpf*.
 Chance hat wie eine 8er-WG. Intern zeigt die WG-Ansicht zusätzlich den „fairen Anteil“, also wie
 viel jede Person bei Gleichverteilung beisteuern müsste.
 
+### Riffpost
+
+Die Muschel 🐚 oben rechts ist der Posteingang. Ist sie leer, bleibt sie grau und still; liegt
+neue Post darin, glimmt eine Perle mit dem Zähler und es steigen Bläschen auf. Ein Tap öffnet
+die Liste, ein Tap auf einen Eintrag springt direkt zur Putzaktion (`#/log/<id>`).
+
+| Anlass | Wer bekommt sie |
+|---|---|
+| 🫧 Reaktion | die Urheberin der Putzaktion |
+| 💬 Kommentar | die Urheberin der Putzaktion |
+| 🐟 Mitschwimmer | alle, die unter derselben Aktion schon kommentiert haben |
+
+Drei Regeln halten die Muschel ruhig, statt sie zur Spam-Schleuder zu machen:
+
+- **Nie sich selbst.** Eigene Reaktionen und Kommentare lösen nichts aus.
+- **Umschalten zählt einmal.** Wer seine Reaktion mehrfach an- und abwählt, erzeugt trotzdem nur
+  eine Post – und wer sie ganz zurücknimmt, dessen Eintrag verschwindet wieder.
+- **Mitschwimmer nur manchmal.** Threads älter als 14 Tage schweigen ganz, und wer noch eine
+  *ungelesene* Thread-Post zu einem Eintrag hat, bekommt keine zweite. Erst nach dem Lesen geht es
+  weiter. Genau das war mit „manchmal“ gemeint – gedrosselt statt zufällig, damit es
+  nachvollziehbar bleibt.
+
+Mehrere Ereignisse zum selben Eintrag werden zu einer Karte zusammengefasst („Lea und 5 andere
+feiern deine Putzaktion“). Gelöschte Einträge und Kommentare nehmen ihre Post per `ON DELETE
+CASCADE` mit, es bleiben also keine Geister-Benachrichtigungen zurück.
+
+**Live, ohne Neuladen.** Die Muschel hängt an einer Dauerleitung per **Server-Sent Events**
+(`GET /api/notifications/stream`): reagiert jemand, ist der Zähler rund 40 ms später oben – und
+ist die Muschel gerade offen, rutscht die neue Karte direkt in die Liste. Bewusst SSE statt
+WebSocket, denn die Post fließt nur in eine Richtung; `EventSource` verbindet sich nach Abbrüchen
+von selbst neu und kostet keine einzige Abhängigkeit. Alle 25 s geht eine Kommentarzeile als
+Herzschlag raus, damit die Leitung offen bleibt.
+
+Zwei Eigenheiten sind erwähnenswert:
+
+- **Token in der Query.** `EventSource` kann keine eigenen Header setzen, deshalb nimmt *nur*
+  dieser eine Endpunkt den Token als `?token=` entgegen (`requireAuthQuery`). Bewusst nicht
+  global – Tokens in URLs landen sonst in jedem Logfile.
+- **Rückfall bleibt drin.** Steht die Leitung nicht (Firewall, alter Proxy), fragt der Client
+  weiterhin alle 60 s nach; solange SSE offen ist, wird dieser Weg übersprungen.
+
 ### Fotos
 
 Fotos sind **optional** – bei Putzaktionen und in Kommentaren. Der Client komprimiert sie vor dem
@@ -108,15 +150,17 @@ putzapp/
 │   ├── game.js             Ränge, Boni, Streaks, Abzeichen, Riff-Sauberkeit
 │   ├── storage.js          Lokale Foto-Ablage (uploads/<Datum>/<userId>_<hash>.jpg)
 │   ├── auth.js             scrypt-Hashing, HMAC-signierte Tokens, Middleware
+│   ├── notify.js           Riffpost: wer bekommt was mit (inkl. Drosselung)
+│   ├── events.js           SSE-Verteiler für die Live-Zustellung
 │   ├── seedDemo.js         Demo-Datensatz
-│   └── routes/             auth · activities · feed · leaderboard · wg · suggestions · users
+│   └── routes/             auth · activities · feed · leaderboard · wg · suggestions · users · notifications
 └── client/                 React 19 + Vite
     ├── src/router.jsx      Hash-Router in ~30 Zeilen (Zurück-Button funktioniert)
-    ├── src/state.jsx       Auth-Context + Toasts
+    ├── src/state.jsx       Auth-Context + Toasts + Riffpost-Zähler
     ├── src/photo.js        Bild-Kompression (max. 1512 px, JPG, EXIF)
     ├── src/styles.css      Design-System: Tiefsee-Glas, Blasen, Lichtstrahlen
-    ├── src/components/     ui.jsx (Avatar, Sheet, Konfetti …) · FeedCard.jsx
-    └── src/pages/          Login · Feed · Add · Board · Ideas · Profile · WG
+    ├── src/components/     ui.jsx (Avatar, Sheet, Konfetti …) · FeedCard.jsx · Inbox.jsx
+    └── src/pages/          Login · Feed · Add · Board · Ideas · Profile · WG · LogDetail
 ```
 
 Die Datenbank liegt als `server/putzapp.db` daneben und wird beim ersten Start selbst angelegt.
