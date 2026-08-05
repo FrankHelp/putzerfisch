@@ -61,6 +61,13 @@ export function togglePlanItem(a) {
   commit({ ...state, items, done });
 }
 
+/** Einzelne Aktivität vom Plan nehmen (anders überlegt). */
+export function removePlanItem(id) {
+  const done = { ...state.done };
+  delete done[id];
+  commit({ ...state, items: state.items.filter((x) => x.id !== id), done });
+}
+
 /** Aktivität im Plan als erledigt markieren (nach erfolgreichem Log). */
 export function markPlanDone(id, info) {
   commit({ ...state, done: { ...state.done, [id]: info } });

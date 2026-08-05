@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api, timeAgo } from '../api.js';
 import { useApp } from '../state.jsx';
+import { navigate } from '../router.jsx';
 import { Sheet, Avatar, Empty, Skeletons, Confetti } from '../components/ui.jsx';
 import { haptic } from '../haptics.js';
 
@@ -62,6 +63,11 @@ export default function Ideas() {
   return (
     <div className="screen">
       {party && <Confetti pieces={['🎉', '✨', '🫧', '💡', '⭐']} count={30} />}
+
+      {/* Kein eigener Reiter mehr – der Weg führt über „Was hast du geschafft?“. */}
+      <button className="back-link" onClick={() => navigate('/add')}>
+        ← Zurück zur Auswahl
+      </button>
 
       <h1 className="screen-title">Ideen-Riff</h1>
       <p className="screen-sub">

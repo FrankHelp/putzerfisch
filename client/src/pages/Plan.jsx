@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api.js';
 import { useApp } from '../state.jsx';
-import { usePlan, markPlanDone, clearPlan } from '../plan.js';
+import { usePlan, markPlanDone, clearPlan, setPlanMode, removePlanItem } from '../plan.js';
 import { navigate } from '../router.jsx';
 import { Empty, Confetti } from '../components/ui.jsx';
 import { haptic } from '../haptics.js';
@@ -22,6 +22,13 @@ export default function Plan() {
 
   useEffect(() => {
     api.get('/activities/categories').then((d) => setCategories(d.categories)).catch(() => {});
+  }, []);
+
+  // Wer den Plan-Reiter öffnet, will sammeln – nicht sofort eintragen.
+  // Also Plan-Modus an: ein Tipp auf der Auswahlseite landet dann hier,
+  // statt direkt geloggt zu werden. clearPlan() schaltet ihn am Ende wieder aus.
+  useEffect(() => {
+    setPlanMode(true);
   }, []);
 
   const items = plan.items;
@@ -61,6 +68,12 @@ export default function Plan() {
         return n;
       });
     }
+  };
+
+  const drop = (a) => {
+    removePlanItem(a.id);
+    haptic('danger'); // wie beim Zurücknehmen: es wird etwas entfernt
+    toast(`${a.icon} ${a.name} vom Plan genommen`);
   };
 
   const leave = (to, msg) => {
@@ -104,22 +117,34 @@ export default function Plan() {
             const done = !!plan.done[a.id];
             const busy = !!working[a.id];
             return (
-              <button
-                key={a.id}
-                className={`act-row plan-item ${done ? 'done' : ''}`}
-                onClick={() => complete(a)}
-                disabled={busy}
-              >
-                <span className={`plan-check ${done ? 'on' : ''}`}>{done ? '✓' : busy ? '…' : ''}</span>
-                <span className="ic">{a.icon}</span>
-                <span className="grow">
-                  <span className="nm">{a.name}</span>
-                  <span className="sub">
-                    {catById[a.category]?.label ?? a.category} · ca. {a.minutes} Min.
+              // Zeile ist ein Container statt eines Buttons: das Abhaken und das
+              // Herunternehmen sind zwei Aktionen, verschachtelte Buttons wären ungültig.
+              <div key={a.id} className={`act-row plan-item ${done ? 'done' : ''}`}>
+                <button className="plan-main" onClick={() => complete(a)} disabled={busy || done}>
+                  <span className={`plan-check ${done ? 'on' : ''}`}>{done ? '✓' : busy ? '…' : ''}</span>
+                  <span className="ic">{a.icon}</span>
+                  <span className="grow">
+                    <span className="nm">{a.name}</span>
+                    <span className="sub">
+                      {catById[a.category]?.label ?? a.category} · ca. {a.minutes} Min.
+                    </span>
                   </span>
-                </span>
-                <span className="pts">{done ? `+${plan.done[a.id].points} P` : `${a.points} P`}</span>
-              </button>
+                  <span className="pts">{done ? `+${plan.done[a.id].points} P` : `${a.points} P`}</span>
+                </button>
+
+                {/* Erledigtes bleibt stehen – die Punkte sind ja schon vergeben. */}
+                {!done && (
+                  <button
+                    className="plan-remove"
+                    onClick={() => drop(a)}
+                    disabled={busy}
+                    title="Vom Plan nehmen"
+                    aria-label={`${a.name} vom Plan nehmen`}
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
             );
           })}
 

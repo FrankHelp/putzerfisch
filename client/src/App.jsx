@@ -19,7 +19,7 @@ import WG from './pages/WG.jsx';
 const TABS = [
   { id: 'feed', icon: '🌊', label: 'Feed' },
   { id: 'board', icon: '🏆', label: 'Rangliste' },
-  { id: 'ideas', icon: '💡', label: 'Ideen' },
+  { id: 'plan', icon: '📋', label: 'Putzplan' },
   { id: 'me', icon: '🐠', label: 'Ich' },
 ];
 

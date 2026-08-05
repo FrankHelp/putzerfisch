@@ -183,9 +183,15 @@ export default function Add() {
               </button>
             ))}
           </div>
-          <p className="faint center mt-lg" style={{ fontSize: 12.5, fontWeight: 600 }}>
-            Fehlt was? <span className="link" onClick={() => navigate('/ideas')}>Schlag es vor →</span>
-          </p>
+          {/* Das Ideen-Riff hat keinen eigenen Reiter mehr – hier ist der Eingang. */}
+          <button className="idea-cta" onClick={() => navigate('/ideas')}>
+            <span className="ic">💡</span>
+            <span className="txt">
+              <span className="nm">Ideen-Riff</span>
+              <span className="sub">Fehlt eine Aktivität? Vorschlagen und abstimmen.</span>
+            </span>
+            <span className="go">→</span>
+          </button>
         </>
       )}
 
