@@ -173,7 +173,7 @@ function Compose({ open, onClose, onCreated }) {
   const [minutes, setMinutes] = useState(10);
   const [description, setDescription] = useState('');
   const [busy, setBusy] = useState(false);
-  const [scRejected, setScRejected] = useState(null); // { message, fails, maxFails }
+  const [scRejected, setScRejected] = useState(null); // { message }
   const [cooldown, setCooldown] = useState(0); // Sekunden bis zum nächsten Versuch
 
   useEffect(() => {
@@ -204,7 +204,14 @@ function Compose({ open, onClose, onCreated }) {
     } catch (err) {
       if (err.status === 422) {
         haptic('warning');
-        setScRejected({ message: err.message, fails: err.fails ?? 3, maxFails: err.maxFails ?? 3 });
+        // retryAfter kommt ab 3/3: Die Seekuh macht sofort Pause, Button sperren.
+        // Kein fails/maxFails anzeigen – der Mechanismus bleibt außen vor.
+        if (err.retryAfter) {
+          setScRejected(null);
+          setCooldown(err.retryAfter);
+        } else {
+          setScRejected({ message: err.message });
+        }
       } else if (err.status === 429) {
         haptic('error');
         setScRejected(null);
@@ -327,11 +334,6 @@ function Compose({ open, onClose, onCreated }) {
             <div>
               <b>Die dumme Seekuh schüttelt den Kopf</b>
               <p>{scRejected.message}</p>
-              <p className="sc-hint">
-                {scRejected.fails >= scRejected.maxFails
-                  ? `Versuch ${scRejected.fails}/${scRejected.maxFails} – jetzt macht sie erstmal Pause.`
-                  : `Versuch ${scRejected.fails}/${scRejected.maxFails} – danach macht sie Pause.`}
-              </p>
             </div>
           </div>
         )}
@@ -340,9 +342,9 @@ function Compose({ open, onClose, onCreated }) {
           <div className="seacow sc-pause">
             <span className="sc-emoji">🦭</span>
             <div>
-              <b>Die dumme Seekuh verdaut</b>
+              <b>Die dumme Seekuh macht erstmal Pause</b>
               <p>
-                Zu viele verrückte Ideen auf einmal. Nächster Versuch in <b>{cooldown} s</b>.
+                Das schwimmt hier nicht. Nächster Versuch in <span className="sc-timer">{cooldown} s</span>.
               </p>
             </div>
           </div>

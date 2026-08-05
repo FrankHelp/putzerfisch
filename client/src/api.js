@@ -4,9 +4,12 @@ export const getToken = () => localStorage.getItem(TOKEN_KEY);
 export const setToken = (t) => (t ? localStorage.setItem(TOKEN_KEY, t) : localStorage.removeItem(TOKEN_KEY));
 
 export class ApiError extends Error {
-  constructor(message, status) {
+  constructor(message, status, data = {}) {
     super(message);
     this.status = status;
+    // Restliche Felder der Antwort durchreichen (z. B. fails, maxFails,
+    // retryAfter von der Seekuh) – sonst greifen im Client Fallbacks.
+    Object.assign(this, data);
   }
 }
 
@@ -29,7 +32,7 @@ async function request(path, { method = 'GET', body } = {}) {
 
   const text = await res.text();
   const data = text ? JSON.parse(text) : {};
-  if (!res.ok) throw new ApiError(data.error || 'Etwas ist schiefgelaufen.', res.status);
+  if (!res.ok) throw new ApiError(data.error || 'Etwas ist schiefgelaufen.', res.status, data);
   return data;
 }
 

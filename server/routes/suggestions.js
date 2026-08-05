@@ -3,7 +3,7 @@ import { db } from '../db.js';
 import { requireAuth, optionalAuth } from '../auth.js';
 import { CATEGORY_IDS } from '../catalog.js';
 import { awardBadge, rankFor } from '../game.js';
-import { moderateSuggestion, rateLimitCheck, recordAttempt, MAX_FAILS } from '../seacow.js';
+import { moderateSuggestion, rateLimitCheck, recordAttempt, MAX_FAILS, COOLDOWN_MS } from '../seacow.js';
 
 export const router = Router();
 
@@ -85,7 +85,14 @@ router.post('/', requireAuth, async (req, res) => {
     .get(name);
   if (dupeOpen) return res.status(409).json({ error: 'Das hat schon jemand vorgeschlagen – stimm dort mit ab!' });
 
-  // „Die dumme Seekuh“ prüft, ob die Idee ins Riff darf.
+  // Versuch JETZT buchen (fail-closed), bevor die Seekuh antwortet. Würde der
+  // Eintrag erst nach der Moderation geschrieben, könnten parallele Requests
+  // (Doppelklick, zweiter Tab) das Rate-Limit umgehen: Sie alle sehen noch den
+  // alten fail_streak, während die ersten Versuche noch bei der API hängen.
+  // Ein API-Fehler (503) bleibt als Fehlversuch stehen – so kann die
+  // DeepSeek-API bei Ausfällen nicht unbegrenzt nachgeballert werden.
+  const fails = recordAttempt(req.user.id, false);
+
   let ok;
   try {
     ok = await moderateSuggestion({ name, description });
@@ -95,15 +102,23 @@ router.post('/', requireAuth, async (req, res) => {
   }
 
   if (!ok) {
-    const fails = recordAttempt(req.user.id, false);
     return res.status(422).json({
       error: 'Das schwimmt hier nicht. Versuch’s nochmal!',
       rejected: true,
-      fails,
-      maxFails: MAX_FAILS,
+      // Ab 3/3 beginnt sofort die Pause – der Client sperrt den Button damit.
+      // fails/maxFails bewusst NICHT mitsenden: Der Zähl-Mechanismus bleibt
+      // für Clients außen vor.
+      retryAfter: fails >= MAX_FAILS ? Math.ceil(COOLDOWN_MS / 1000) : undefined,
     });
   }
-  recordAttempt(req.user.id, true);
+
+  // Annahme: Den soeben als Fehlversuch gebuchten Eintrag zur Annahme umbuchen,
+  // damit die Serie wieder bei 0 steht und das Limit nicht weiter zählt.
+  db.prepare(
+    `UPDATE seacow_attempts
+     SET accepted = 1, fail_streak = 0
+     WHERE id = (SELECT id FROM seacow_attempts WHERE user_id = ? ORDER BY id DESC LIMIT 1)`
+  ).run(req.user.id);
 
   const info = db
     .prepare(

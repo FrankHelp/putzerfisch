@@ -1609,6 +1609,8 @@ textarea.input { resize: vertical; min-height: 76px; line-height: 1.5; }
 }
 .seacow.sc-pause b { color: var(--sand); }
 .seacow.sc-pause .sc-emoji { animation: none; opacity: 0.85; }
+/* Timer im Pause-Banner: bleibt inline (anders als .seacow b mit display:block) */
+.seacow .sc-timer { display: inline; font-weight: 800; color: var(--sand); }
 
 @keyframes sc-shake {
   0%, 100% { transform: translateX(0) rotate(0deg); }

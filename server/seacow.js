@@ -131,14 +131,28 @@ export function rateLimitCheck(userId) {
 
 /**
  * Speichert einen Moderation-Versuch. Liefert die aktuelle Fehlerserie
- * (fail_streak): zählt aufeinanderfolgende Ablehnungen, setzt sich bei
- * Annahme zurück. Grundlage für das Rate-Limit.
+ * (fail_streak): zählt Ablehnungen, die innerhalb von COOLDOWN_MS
+ * aufeinanderfolgen. Grundlage für das Rate-Limit.
+ *
+ * Reset-Regeln:
+ * - Annahme → Serie auf 0.
+ * - Ablehnung nach abgelaufener Pause (letzter Versuch älter als COOLDOWN_MS)
+ *   → Serie startet wieder bei 1. Sonst bliebe die Zählung ewig bei 4/3, 5/3 …
  */
 export function recordAttempt(userId, accepted) {
   const last = db
-    .prepare('SELECT accepted, fail_streak FROM seacow_attempts WHERE user_id = ? ORDER BY id DESC LIMIT 1')
+    .prepare('SELECT accepted, fail_streak, created_at FROM seacow_attempts WHERE user_id = ? ORDER BY id DESC LIMIT 1')
     .get(userId);
-  const streak = accepted ? 0 : (last && !last.accepted ? last.fail_streak : 0) + 1;
+
+  let streak;
+  if (accepted) {
+    streak = 0;
+  } else {
+    const stillInCooldown =
+      last && !last.accepted && Date.now() - new Date(last.created_at).getTime() < COOLDOWN_MS;
+    streak = stillInCooldown ? last.fail_streak + 1 : 1;
+  }
+
   db.prepare('INSERT INTO seacow_attempts (user_id, accepted, fail_streak, created_at) VALUES (?, ?, ?, ?)').run(
     userId,
     accepted ? 1 : 0,
