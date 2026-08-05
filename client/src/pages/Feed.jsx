@@ -7,7 +7,9 @@ import { Empty, Skeletons, XPBar, Avatar } from '../components/ui.jsx';
 
 export default function Feed() {
   const { user, toast } = useApp();
-  const [scope, setScope] = useState(user?.wg ? 'wg' : 'global');
+  // Standard ist bewusst das große Riff: neue Leute sehen sofort Leben,
+  // auch wenn ihre eigene WG noch still ist.
+  const [scope, setScope] = useState('global');
   const [items, setItems] = useState(null);
   const [cursor, setCursor] = useState(null);
   const [loadingMore, setLoadingMore] = useState(false);

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { api, timeAgo } from '../api.js';
+import { api, timeAgo, plural } from '../api.js';
 import { useApp } from '../state.jsx';
 import { navigate } from '../router.jsx';
 import { Avatar } from './ui.jsx';
@@ -44,6 +44,8 @@ export default function FeedCard({ item, index = 0, onDeleted, openComments = fa
     }
     setPicker(false);
   };
+
+  const reactionTotal = reactions.reduce((s, r) => s + r.count, 0);
 
   const remove = async () => {
     if (!confirm('Diesen Eintrag wirklich zurücknehmen? Die Punkte werden abgezogen.')) return;
@@ -161,11 +163,11 @@ export default function FeedCard({ item, index = 0, onDeleted, openComments = fa
           className={`foot-btn ${showComments ? 'on' : ''}`}
           onClick={() => setShowComments((s) => !s)}
         >
-          💬 {commentCount > 0 ? `${commentCount} Kommentare` : 'Kommentieren'}
+          💬 {commentCount > 0 ? plural(commentCount, 'Kommentar', 'Kommentare') : 'Kommentieren'}
         </button>
         <span className="grow" />
         <span className="foot-btn" style={{ pointerEvents: 'none' }}>
-          {reactions.reduce((s, r) => s + r.count, 0)} Reaktionen
+          {plural(reactionTotal, 'Reaktion', 'Reaktionen')}
         </span>
       </div>
 

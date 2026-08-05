@@ -60,3 +60,6 @@ export function timeAgo(iso) {
 }
 
 export const num = (n) => (n ?? 0).toLocaleString('de-DE');
+
+/** „1 Kommentar“ vs. „3 Kommentare“ – Zahl mit passender Form. */
+export const plural = (n, one, many) => `${num(n)} ${n === 1 ? one : many}`;

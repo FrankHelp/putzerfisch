@@ -13,7 +13,7 @@ const RANGES = [
 
 export default function Board() {
   const { user, toast } = useApp();
-  const [tab, setTab] = useState(user?.wg ? 'wg' : 'global');
+  const [tab, setTab] = useState('global'); // global zuerst – siehe Feed
   const [range, setRange] = useState('week');
   const [data, setData] = useState(null);
 
