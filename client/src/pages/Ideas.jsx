@@ -65,7 +65,7 @@ export default function Ideas() {
 
       <h1 className="screen-title">Ideen-Riff</h1>
       <p className="screen-sub">
-        Schlag neue Aktivitäten vor. Die dumme Seekuh prüft jede Idee – ab {data?.threshold ?? 10} Stimmen
+        Schlag neue Putzaktivitäten vor. Ab {data?.threshold ?? 10} Stimmen
         wandern sie in den Katalog.
       </p>
 
