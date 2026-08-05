@@ -49,13 +49,11 @@ mkdir -p /var/www/certbot
 nginx -t
 systemctl reload nginx
 
-# ---- 3) Zertifikat erstellen (einmalig) ---------------------------------
-echo "==> Let's-Encrypt-Zertifikat erstellen"
-if [ ! -d "/etc/letsencrypt/live/$DOMAIN" ]; then
-  certbot certonly --webroot -w /var/www/certbot -d "$DOMAIN"
-else
-  echo "   Zertifikat existiert bereits – übersprungen."
-fi
+# ---- 3) Zertifikat erstellen bzw. um www erweitern ----------------------
+echo "==> Let's-Encrypt-Zertifikat erstellen/erweitern"
+# Idempotent: legt bei Erst-Setup ein Cert fuer Apex + www an, erweitert ein
+# bestehendes Cert um www (--expand), oder tut nichts, wenn alles drin ist.
+certbot certonly --webroot -w /var/www/certbot -d "$DOMAIN" -d "www.$DOMAIN" --expand
 
 # ---- 4) Finale HTTPS-Conf aktivieren ------------------------------------
 echo "==> HTTPS-Conf aktivieren"
