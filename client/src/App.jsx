@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useApp } from './state.jsx';
 import { useRoute, navigate } from './router.jsx';
+import { setPlanMode } from './plan.js';
 import { Ocean, Toasts, Sheet, Avatar } from './components/ui.jsx';
 import { initSoundSystem, startMusic, getSoundEnabled, setSoundEnabled } from './sound.js';
 import { initHapticSystem } from './haptics.js';
@@ -317,7 +318,17 @@ function TabBar({ view }) {
       ))}
 
       <div className="fab-slot">
-        <button className="fab" onClick={() => navigate('/add')} aria-label="Putzaktivität eintragen">
+        {/* Der Schwamm ist der schnelle „jetzt putzen“-Einstieg: Plan-Modus aus,
+            damit ein Tipp nicht versehentlich den Plan befüllt. Planen geht über
+            den Putzplan-Reiter unten oder den 📋-Toggle in der Auswahl. */}
+        <button
+          className="fab"
+          onClick={() => {
+            setPlanMode(false);
+            navigate('/add');
+          }}
+          aria-label="Putzaktivität eintragen"
+        >
           🧽
         </button>
       </div>
