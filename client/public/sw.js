@@ -24,8 +24,12 @@ self.addEventListener('push', (e) => {
   e.waitUntil(
     self.registration.showNotification(data.title || '🐚 Riffpost', {
       body: data.body || 'Jemand war im Riff aktiv.',
+      // icon  = großes Bild in der aufgeklappten Benachrichtigung (farbig).
+      // badge = kleines Symbol in der Android-Statusleiste. Davon wird NUR der
+      //         Alphakanal benutzt und weiß eingefärbt – ein farbiges PNG käme
+      //         dort als grauer Klecks an. Deshalb die eigene Fisch-Silhouette.
       icon: '/icon-192.png',
-      badge: '/icon-192.png',
+      badge: '/icon-badge.png',
       tag: data.tag || 'riffpost',
       vibrate: [120, 60, 120],
       data: { url: data.url || '/#/feed' },
