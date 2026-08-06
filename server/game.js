@@ -2,18 +2,19 @@
 
 export const RANKS = [
   { level: 1,  xp: 0,     name: 'Planktonputzer',    fish: '🦠', blurb: 'Jeder fängt klein an.' },
-  { level: 2,  xp: 150,   name: 'Putzerfisch-Larve', fish: '🐟', blurb: 'Erste Schuppen poliert.' },
-  { level: 3,  xp: 400,   name: 'Jungputzer',        fish: '🐠', blurb: 'Der Schwamm sitzt locker.' },
-  { level: 4,  xp: 800,   name: 'Riffreiniger',      fish: '🐡', blurb: 'Das Riff atmet auf.' },
-  { level: 5,  xp: 1400,  name: 'Schuppenpolierer',  fish: '🐬', blurb: 'Glanz auf Bestellung.' },
-  { level: 6,  xp: 2200,  name: 'Korallenwächter',   fish: '🪸', blurb: 'Kein Fleck kommt durch.' },
-  { level: 7,  xp: 3200,  name: 'Blasenmeister',     fish: '🫧', blurb: 'Schaum ist deine Sprache.' },
-  { level: 8,  xp: 4500,  name: 'Riff-Sheriff',      fish: '🦈', blurb: 'Du putzt mit Autorität.' },
-  { level: 9,  xp: 6000,  name: 'Tiefsee-Schrubber', fish: '🐙', blurb: 'Acht Arme, null Dreck.' },
-  { level: 10, xp: 8000,  name: 'Großer Putzerfisch',fish: '🐋', blurb: 'Legendäre Ausdauer.' },
-  { level: 11, xp: 11000, name: 'Herrscher des Riffs',fish: '🔱', blurb: 'Das Meer gehorcht dir.' },
-  { level: 12, xp: 15000, name: 'Legende der Lagune',fish: '👑', blurb: 'Über dir nur noch Wasser.' },
+  { level: 2,  xp: 30,   name: 'Putzerfisch-Larve', fish: '🐟', blurb: 'Erste Schuppen poliert.' },
+  { level: 3,  xp: 120,   name: 'Jungputzer',        fish: '🐠', blurb: 'Der Schwamm sitzt locker.' },
+  { level: 4,  xp: 350,   name: 'Riffreiniger',      fish: '🐡', blurb: 'Das Riff atmet auf.' },
+  { level: 5,  xp: 680,  name: 'Schuppenpolierer',  fish: '🐬', blurb: 'Glanz auf Bestellung.' },
+  { level: 6,  xp: 1150,  name: 'Korallenwächter',   fish: '🪸', blurb: 'Kein Fleck kommt durch.' },
+  { level: 7,  xp: 1700,  name: 'Blasenmeister',     fish: '🫧', blurb: 'Schaum ist deine Sprache.' },
+  { level: 8,  xp: 2400,  name: 'Riff-Sheriff',      fish: '🦈', blurb: 'Du putzt mit Autorität.' },
+  { level: 9,  xp: 3300,  name: 'Tiefsee-Schrubber', fish: '🐙', blurb: 'Acht Arme, null Dreck.' },
+  { level: 10, xp: 4200,  name: 'Großer Putzerfisch',fish: '🐋', blurb: 'Legendäre Ausdauer.' },
+  { level: 11, xp: 5400, name: 'Herrscher des Riffs',fish: '🔱', blurb: 'Das Meer gehorcht dir.' },
+  { level: 12, xp: 6700, name: 'Legende der Lagune',fish: '👑', blurb: 'Über dir nur noch Wasser.' },
 ];
+
 
 export function rankFor(xp) {
   let current = RANKS[0];
