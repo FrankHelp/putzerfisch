@@ -4,6 +4,7 @@ import { useApp } from '../state.jsx';
 import { usePlan, markPlanDone, clearPlan, setPlanMode, removePlanItem } from '../plan.js';
 import { navigate } from '../router.jsx';
 import { Empty, Confetti } from '../components/ui.jsx';
+import { StreakCelebration, LevelUpCelebration } from '../components/Celebration.jsx';
 import { haptic } from '../haptics.js';
 
 /* ---------- Putzplan: die vorbereitete Checkliste ----------
@@ -19,6 +20,10 @@ export default function Plan() {
   const [working, setWorking] = useState({}); // id -> gerade am Loggen
   const [celebrate, setCelebrate] = useState(false);
   const [closing, setClosing] = useState(false);
+  // Feier beim Abhaken: Serie/Rang-Aufstieg bekommt einen eigenen Screen.
+  const [celebration, setCelebration] = useState(null);
+  const [queue, setQueue] = useState([]); // streak → levelup (kein Punkte-Screen im Plan)
+  const [pendingBadges, setPendingBadges] = useState([]); // Badge-Toasts, bis die Feier vorbei ist
 
   useEffect(() => {
     api.get('/activities/categories').then((d) => setCategories(d.categories)).catch(() => {});
@@ -56,9 +61,18 @@ export default function Plan() {
       setUser(d.user);
       markPlanDone(a.id, { points: d.points });
       haptic('success'); // Aufgabe abgehakt = Punkte kassiert
-      toast(`${a.icon} ${a.name} erledigt — +${d.points} Punkte 🫧`);
-      if (d.leveledUp) toast(`🏆 Neuer Rang: ${d.leveledUp.name}`);
-      (d.newBadges ?? []).forEach((b) => toast(`${b.icon} Badge: ${b.name}`));
+      // Meilensteine feiern (Serie, Rang) – sonst bleibt der gewohnte Toast.
+      const q = [];
+      if (d.streakChanged && d.streak >= 2) q.push('streak');
+      if (d.leveledUp) q.push('levelup');
+      if (q.length > 0) {
+        setCelebration(d);
+        setQueue(q);
+        setPendingBadges(d.newBadges ?? []);
+      } else {
+        toast(`${a.icon} ${a.name} erledigt — +${d.points} Punkte 🫧`);
+        (d.newBadges ?? []).forEach((b) => toast(`${b.icon} Badge: ${b.name}`));
+      }
     } catch (e) {
       toast(e.message, 'err');
     } finally {
@@ -67,6 +81,19 @@ export default function Plan() {
         delete n[a.id];
         return n;
       });
+    }
+  };
+
+  const advance = () => {
+    const rest = queue.slice(1);
+    if (rest.length === 0) {
+      // Badges erst nach der Feier melden – Toasts lägen sonst unsichtbar hinter dem Splash.
+      pendingBadges.forEach((b) => toast(`${b.icon} Badge: ${b.name}`));
+      setPendingBadges([]);
+      setCelebration(null);
+      setQueue([]);
+    } else {
+      setQueue(rest);
     }
   };
 
@@ -84,6 +111,23 @@ export default function Plan() {
   };
 
   if (closing) return <div className="screen" />;
+
+  // Meilenstein-Feier (Serie/Rang) überdeckt den Plan, bis „Weiter" gedrückt wird.
+  if (celebration && queue.length > 0) {
+    const screen = queue[0];
+    return (
+      <>
+        {screen === 'streak' && (
+          <StreakCelebration
+            streak={celebration.streak}
+            bestStreak={celebration.user?.bestStreak}
+            onDone={advance}
+          />
+        )}
+        {screen === 'levelup' && <LevelUpCelebration rank={celebration.leveledUp} onDone={advance} />}
+      </>
+    );
+  }
 
   return (
     <div className="screen">

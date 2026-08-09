@@ -1496,24 +1496,97 @@ textarea.input { resize: vertical; min-height: 76px; line-height: 1.5; }
 .splash .headline { font-size: 22px; margin: 10px 0 4px; }
 .splash .sub { color: var(--muted); font-weight: 700; font-size: 14px; }
 
-.levelup {
-  margin-top: 18px;
-  padding: 14px 18px;
-  border-radius: var(--r-lg);
-  background: linear-gradient(135deg, rgba(255, 213, 74, 0.22), rgba(255, 122, 89, 0.14));
-  border: 1px solid rgba(255, 213, 74, 0.45);
-  animation: bounceIn 0.6s 0.35s cubic-bezier(0.2, 1.5, 0.4, 1) backwards;
+/* ---------- Serien-Feier ---------- */
+.splash .ring.streak-ring {
+  background: radial-gradient(circle, rgba(255, 122, 89, 0.3), transparent 70%);
+  border-color: var(--coral);
+  box-shadow: 0 0 60px rgba(255, 122, 89, 0.55);
 }
 
-.levelup .lu-title {
+.splash .streak-days {
+  font-size: 32px;
+  font-weight: 900;
+  line-height: 1.15;
+  margin-top: 6px;
+  animation: bounceIn 0.6s 0.12s cubic-bezier(0.2, 1.5, 0.4, 1) backwards;
+}
+
+.splash .streak-num {
+  background: linear-gradient(135deg, var(--coral), var(--gold));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.splash .streak-best {
+  display: inline-flex;
+  margin-top: 12px;
+  padding: 5px 13px;
+  border-radius: 999px;
+  background: var(--glass);
+  border: 1px solid var(--stroke);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+/* ---------- Level-Up-Feier ---------- */
+.splash .ring.lu-ring {
+  background: radial-gradient(circle, rgba(255, 213, 74, 0.3), transparent 70%);
+  border-color: var(--gold);
+  box-shadow: 0 0 60px rgba(255, 213, 74, 0.6);
+}
+
+.splash .lu-level {
+  display: inline-flex;
+  padding: 4px 13px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 213, 74, 0.45);
+  background: rgba(255, 213, 74, 0.12);
+  color: var(--gold);
   font-size: 12px;
+  font-weight: 900;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--gold);
-  font-weight: 900;
+  animation: bounceIn 0.6s 0.12s cubic-bezier(0.2, 1.5, 0.4, 1) backwards;
 }
 
-.levelup .lu-name { font-size: 20px; font-weight: 900; margin-top: 3px; }
+.splash .lu-title-big {
+  margin-top: 8px;
+  font-size: 46px;
+  font-weight: 900;
+  line-height: 1;
+  background: linear-gradient(135deg, var(--gold), var(--coral));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: bounceIn 0.6s 0.2s cubic-bezier(0.2, 1.5, 0.4, 1) backwards;
+}
+
+.splash .lu-name-big {
+  margin-top: 10px;
+  font-size: 24px;
+  font-weight: 900;
+  animation: bounceIn 0.6s 0.28s cubic-bezier(0.2, 1.5, 0.4, 1) backwards;
+}
+
+.splash .rank-bar {
+  height: 8px;
+  margin-top: 6px;
+  border-radius: 999px;
+  background: rgba(4, 20, 34, 0.6);
+  border: 1px solid var(--stroke);
+  overflow: hidden;
+}
+
+.splash .rank-bar i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--gold), var(--coral));
+  box-shadow: 0 0 10px rgba(255, 213, 74, 0.55);
+  transition: width 0.4s cubic-bezier(0.2, 0.9, 0.25, 1);
+}
 
 .badge-pop {
   display: inline-flex;

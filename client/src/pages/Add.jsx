@@ -3,6 +3,7 @@ import { api, num } from '../api.js';
 import { useApp } from '../state.jsx';
 import { navigate } from '../router.jsx';
 import { Sheet, Empty, Skeletons, Confetti, CountUp } from '../components/ui.jsx';
+import { StreakCelebration, LevelUpCelebration } from '../components/Celebration.jsx';
 import { compressToJpegDataUrl } from '../photo.js';
 import { usePlan, setPlanMode, togglePlanItem } from '../plan.js';
 import { haptic } from '../haptics.js';
@@ -20,7 +21,8 @@ export default function Add() {
   const [note, setNote] = useState('');
   const [photo, setPhoto] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [celebration, setCelebration] = useState(null);
+  const [celebration, setCelebration] = useState(null); // Daten der letzten Aktion
+  const [queue, setQueue] = useState([]); // Feier-Reihenfolge: streak → levelup → points
   const photoInputRef = useRef(null);
 
   useEffect(() => {
@@ -83,11 +85,29 @@ export default function Add() {
       setSelected(null);
       setPhoto(null);
       haptic('success'); // Belohnungs-Tick, sobald die Punkte sicher sind
+      // Feier-Reihenfolge: erst die Serie (wie bei Duolingo), dann der Rang,
+      // zum Schluss die Punkte-Summary mit Rückgängig.
+      const q = [];
+      if (d.streakChanged && d.streak >= 2) q.push('streak');
+      if (d.leveledUp) q.push('levelup');
+      q.push('points');
       setCelebration({ ...d, activity: selected });
+      setQueue(q);
     } catch (e) {
       toast(e.message, 'err');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const advance = () => {
+    const rest = queue.slice(1);
+    if (rest.length === 0) {
+      setCelebration(null);
+      setQueue([]);
+      navigate('/feed');
+    } else {
+      setQueue(rest);
     }
   };
 
@@ -115,17 +135,22 @@ export default function Add() {
     else toast('Plan-Modus an – antippen sammelt Aufgaben 📋');
   };
 
-  if (celebration)
+  if (celebration && queue.length > 0) {
+    const screen = queue[0];
     return (
-      <Celebration
-        data={celebration}
-        onDone={() => {
-          setCelebration(null);
-          navigate('/feed');
-        }}
-        onUndo={undoLast}
-      />
+      <>
+        {screen === 'streak' && (
+          <StreakCelebration
+            streak={celebration.streak}
+            bestStreak={celebration.user?.bestStreak}
+            onDone={advance}
+          />
+        )}
+        {screen === 'levelup' && <LevelUpCelebration rank={celebration.leveledUp} onDone={advance} />}
+        {screen === 'points' && <Celebration data={celebration} onDone={advance} onUndo={undoLast} />}
+      </>
     );
+  }
 
   return (
     <div className="screen">
@@ -347,19 +372,9 @@ function Celebration({ data, onDone, onUndo }) {
           </div>
         )}
 
-        {data.streak > 1 && (
+        {data.streak > 1 && !data.streakChanged && (
           <div className="streak-chip" style={{ marginTop: 14 }}>
             🔥 {data.streak} Tage Serie
-          </div>
-        )}
-
-        {data.leveledUp && (
-          <div className="levelup">
-            <div className="lu-title">Neuer Rang</div>
-            <div className="lu-name">
-              {data.leveledUp.fish} {data.leveledUp.name}
-            </div>
-            <div className="sub" style={{ marginTop: 3 }}>{data.leveledUp.blurb}</div>
           </div>
         )}
 
@@ -390,3 +405,4 @@ function Celebration({ data, onDone, onUndo }) {
     </div>
   );
 }
+

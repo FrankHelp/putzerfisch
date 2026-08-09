@@ -80,7 +80,7 @@ router.post('/log', requireAuth, (req, res) => {
   }
 
   const before = rankFor(req.user.xp);
-  const { streak } = updateStreak(db, req.user);
+  const { streak, changed } = updateStreak(db, req.user);
   const { points, bonuses } = computePoints(db, req.user, activity, streak);
 
   const info = db
@@ -105,6 +105,7 @@ router.post('/log', requireAuth, (req, res) => {
     basePoints: activity.points,
     bonuses,
     streak,
+    streakChanged: changed,
     leveledUp: after.level > before.level ? after : null,
     newBadges,
     user: publicUser(updated),
