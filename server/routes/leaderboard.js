@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { db } from '../db.js';
 import { optionalAuth } from '../auth.js';
-import { rankFor, reefHealth } from '../game.js';
+import { rankFor, reefHealth, activeStreak } from '../game.js';
 
 export const router = Router();
 
@@ -20,7 +20,7 @@ const shapeEntry = (r, i, viewerId) => ({
   fish: r.fish,
   color: r.color,
   points: Number(r.points ?? 0),
-  streak: r.streak,
+  streak: activeStreak(r),
   level: rankFor(r.xp).level,
   rankName: rankFor(r.xp).name,
   wg: r.wg_name ? { name: r.wg_name, emblem: r.wg_emblem } : null,

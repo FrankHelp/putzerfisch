@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { db } from '../db.js';
 import { hashPassword, verifyPassword, signToken, requireAuth } from '../auth.js';
-import { rankFor, BADGES } from '../game.js';
+import { rankFor, BADGES, activeStreak } from '../game.js';
 
 export const router = Router();
 
@@ -24,7 +24,7 @@ export function publicUser(u) {
     fish: u.fish,
     color: u.color,
     xp: u.xp,
-    streak: u.streak,
+    streak: activeStreak(u),
     bestStreak: u.best_streak,
     rank,
     badges,

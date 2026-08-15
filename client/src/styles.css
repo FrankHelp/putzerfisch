@@ -287,12 +287,6 @@ h1, h2, h3, h4 {
   color: var(--sand);
 }
 
-.streak-chip.cold {
-  background: var(--glass);
-  border-color: var(--stroke);
-  color: var(--faint);
-}
-
 .settings-btn {
   display: inline-flex;
   align-items: center;
@@ -1648,7 +1642,8 @@ textarea.input { resize: vertical; min-height: 76px; line-height: 1.5; }
 
 .stat-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  /* auto-fit: bei nur 2 Stats (Serie ausgeblendet) keine leere dritte Spalte */
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
   gap: 9px;
 }
 

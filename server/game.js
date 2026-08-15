@@ -173,6 +173,20 @@ export function updateStreak(db, user) {
 }
 
 /**
+ * Aktuelle, wirklich lebendige Streak: nur wenn zuletzt heute oder gestern
+ * geputzt wurde. Ist die Serie abgerissen (letzter Putztag älter), gilt sie
+ * als inaktiv → 0, damit die UI sie nirgends mehr anzeigt (Chip, Profil,
+ * Ranglisten). Der gespeicherte Wert bleibt unangetastet – Serien-Bonus und
+ * Verlängerung in updateStreak rechnen weiter mit dem Rohwert.
+ */
+export function activeStreak(u) {
+  if (!u?.last_clean_day) return 0;
+  if (u.last_clean_day === dayKey()) return u.streak;
+  if (u.last_clean_day === dayKey(new Date(Date.now() - 86400000))) return u.streak;
+  return 0;
+}
+
+/**
  * Berechnet die finalen Punkte inkl. Boni.
  * Boni sind multiplikativ auf die Basispunkte und werden dem Nutzer transparent gezeigt.
  */

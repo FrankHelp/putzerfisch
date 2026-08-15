@@ -79,10 +79,12 @@ export default function Profile({ userId }) {
       </div>
 
       <div className="stat-grid mt">
-        <div className="stat">
-          <div className="v">🔥 {u.streak}</div>
-          <div className="k">SERIE</div>
-        </div>
+        {u.streak > 0 && (
+          <div className="stat">
+            <div className="v">🔥 {u.streak}</div>
+            <div className="k">SERIE</div>
+          </div>
+        )}
         <div className="stat">
           <div className="v">🏅 {u.bestStreak}</div>
           <div className="k">REKORD</div>

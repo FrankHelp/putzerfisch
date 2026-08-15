@@ -2,7 +2,7 @@ import crypto from 'node:crypto';
 import { Router } from 'express';
 import { db } from '../db.js';
 import { requireAuth } from '../auth.js';
-import { reefHealth, rankFor } from '../game.js';
+import { reefHealth, rankFor, activeStreak } from '../game.js';
 import { publicUser } from './auth.js';
 
 export const router = Router();
@@ -35,7 +35,7 @@ router.get('/mine', requireAuth, (req, res) => {
       fish: m.fish,
       color: m.color,
       xp: m.xp,
-      streak: m.streak,
+      streak: activeStreak(m),
       level: rankFor(m.xp).level,
       rankName: rankFor(m.xp).name,
       isMe: m.id === req.user.id,

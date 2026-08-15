@@ -112,7 +112,6 @@ function Screen({ view, param }) {
 }
 
 function TopBar({ user, view, onOpenSettings }) {
-  const hot = user.streak > 0;
   return (
     <header className="topbar">
       <div className="brand">
@@ -121,9 +120,11 @@ function TopBar({ user, view, onOpenSettings }) {
       </div>
       <div className="spacer" />
       <Inbox />
-      <div className={`streak-chip ${hot ? '' : 'cold'}`} title="Tage in Folge geputzt">
-        {hot ? '🔥' : '🧊'} {user.streak}
-      </div>
+      {user.streak > 0 && (
+        <div className="streak-chip" title="Tage in Folge geputzt">
+          🔥 {user.streak}
+        </div>
+      )}
       {view === 'me' ? (
         <button className="settings-btn" onClick={onOpenSettings} aria-label="Einstellungen" title="Einstellungen">
           <SettingsIcon />

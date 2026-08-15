@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { db } from '../db.js';
 import { optionalAuth } from '../auth.js';
-import { rankFor, BADGES, dayKey, berlinDayRange } from '../game.js';
+import { rankFor, BADGES, dayKey, berlinDayRange, activeStreak } from '../game.js';
 import { CATEGORIES } from '../catalog.js';
 
 export const router = Router();
@@ -63,7 +63,7 @@ router.get('/:id', optionalAuth, (req, res) => {
       fish: u.fish,
       color: u.color,
       xp: u.xp,
-      streak: u.streak,
+      streak: activeStreak(u),
       bestStreak: u.best_streak,
       rank: rankFor(u.xp),
       createdAt: u.created_at,
